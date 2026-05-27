@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Arduino desde Cero · Proyecto</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  :root{
+    --bg:#0a0a0a; --surface:#111111; --surface2:#1a1a1a;
+    --accent:#00ff88; --accent-dim:#00ff8822;
+    --text:#e6e6e6; --muted:#888888; --border:#262626;
+  }
+  html,body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,system-ui,sans-serif;min-height:100vh;}
+  .mono{font-family:'JetBrains Mono','Fira Code','Menlo',monospace;}
+  .grid-bg{
+    background-image:
+      linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);
+    background-size:48px 48px;
+  }
+  .card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    transition:border-color .2s, box-shadow .2s, transform .15s;
+    text-decoration:none;
+    display:block;
+    color:var(--text);
+  }
+  .card:hover{
+    border-color:var(--accent);
+    box-shadow:0 0 0 1px #00ff8822, 0 0 32px -8px #00ff8844;
+    transform:translateY(-2px);
+  }
+  .badge{
+    font-size:.7rem;
+    padding:.2rem .55rem;
+    border-radius:99px;
+    font-weight:600;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+  }
+  .glow-dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--accent);
+    box-shadow:0 0 8px var(--accent);
+    display:inline-block;
+  }
+</style>
+</head>
+<body class="grid-bg">
+
+<div class="max-w-4xl mx-auto px-6 py-16">
+
+  <!-- Header -->
+  <div class="mb-14">
+    <div class="flex items-center gap-3 mb-4">
+      <span class="glow-dot"></span>
+      <span class="mono text-sm" style="color:var(--muted)">arduino-desde-cero / docs</span>
+    </div>
+    <h1 class="text-4xl font-bold mb-3" style="letter-spacing:-.02em">
+      Arduino desde Cero
+    </h1>
+    <p style="color:var(--muted);max-width:520px;line-height:1.6;">
+      Documentación completa del proyecto: guía técnica de Python + Arduino,
+      plan de comunicación del equipo y tablero SCRUM.
+    </p>
+  </div>
+
+  <!-- Cards -->
+  <div class="grid gap-5 md:grid-cols-1">
+
+    <!-- Arduino + Python -->
+    <a href="Arduino%20con%20Python.html" class="card p-7">
+      <div class="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="badge" style="background:#00ff8822;color:#00ff88;">Python · Arduino</span>
+            <span class="badge" style="background:#3b82f622;color:#60a5fa;">Software</span>
+          </div>
+          <h2 class="text-xl font-semibold">Arduino con Python</h2>
+        </div>
+        <svg class="shrink-0 mt-1" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:var(--muted)"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+      </div>
+      <p style="color:var(--muted);line-height:1.65;font-size:.92rem;">
+        Guía técnica end-to-end para el equipo de software: comunicación serial,
+        control de pines, sensores y actuadores desde Python. Incluye ejercicios
+        interactivos y snippets listos para usar.
+      </p>
+    </a>
+
+    <!-- Comunicación -->
+    <a href="comunicacion/Comunicacion%20del%20Proyecto.html" class="card p-7">
+      <div class="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="badge" style="background:#ff6b3522;color:#ff6b35;">Comunicación</span>
+            <span class="badge" style="background:#ffffff11;color:var(--muted);">Equipo</span>
+          </div>
+          <h2 class="text-xl font-semibold">Comunicación del Proyecto</h2>
+        </div>
+        <svg class="shrink-0 mt-1" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:var(--muted)"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+      </div>
+      <p style="color:var(--muted);line-height:1.65;font-size:.92rem;">
+        Plan de comunicación del equipo: canales, responsables, frecuencia de
+        reuniones y flujo de información entre las áreas de hardware, software
+        y comunicación.
+      </p>
+    </a>
+
+    <!-- Scrum -->
+    <a href="scrum/Scrum%20del%20Proyecto.html" class="card p-7">
+      <div class="flex items-start justify-between gap-4 mb-4">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="badge" style="background:#a78bfa22;color:#a78bfa;">Scrum</span>
+            <span class="badge" style="background:#ffffff11;color:var(--muted);">Gestión</span>
+          </div>
+          <h2 class="text-xl font-semibold">Scrum del Proyecto</h2>
+        </div>
+        <svg class="shrink-0 mt-1" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24" style="color:var(--muted)"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25"/></svg>
+      </div>
+      <p style="color:var(--muted);line-height:1.65;font-size:.92rem;">
+        Tablero y documentación de la metodología ágil: sprints, backlog,
+        velocidad del equipo y burndown. Estado actual del proyecto y
+        próximos hitos.
+      </p>
+    </a>
+
+  </div>
+
+  <!-- Footer -->
+  <div class="mt-16 pt-8 flex items-center justify-between" style="border-top:1px solid var(--border);">
+    <span class="mono text-xs" style="color:var(--muted);">pablokaegi · 2026</span>
+    <a href="https://github.com/pablokaegi/arduino-desde-cero" target="_blank"
+       class="flex items-center gap-2 text-xs hover:opacity-70 transition-opacity"
+       style="color:var(--muted);text-decoration:none;">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+      Ver en GitHub
+    </a>
+  </div>
+
+</div>
+</body>
+</html>

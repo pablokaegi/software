@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Arduino desde Cero · Python para el team de software</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<style>
+  :root{
+    --bg:#0a0a0a; --surface:#111111; --surface2:#1a1a1a; --surface3:#222222;
+    --accent:#00ff88; --accent-dim:#00ff8822; --blue:#3b82f6;
+    --text:#e6e6e6; --muted:#888888; --border:#262626;
+    --red:#ff5577; --yellow:#ffcc00;
+  }
+  html,body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,system-ui,sans-serif;}
+  .mono{font-family:'JetBrains Mono','Fira Code','Menlo',monospace;}
+  .grid-bg{
+    background-image:
+      linear-gradient(rgba(0,255,136,0.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,255,136,0.025) 1px,transparent 1px);
+    background-size: 48px 48px;
+  }
+  .glow{box-shadow:0 0 0 1px var(--accent-dim), 0 0 24px -8px var(--accent);}
+  .glow-soft{box-shadow:0 0 0 1px #ffffff10;}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;}
+  .panel-2{background:var(--surface2);border:1px solid var(--border);border-radius:10px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;font-size:11px;border:1px solid var(--border);background:var(--surface2);}
+  .accent{color:var(--accent);}
+  .muted{color:var(--muted);}
+  .terminal{background:#000;color:var(--accent);font-family:'JetBrains Mono',monospace;font-size:12.5px;padding:14px 16px;border-radius:8px;border:1px solid #003322;white-space:pre-wrap;line-height:1.55;}
+  .terminal .dim{color:#4a8a6a;}
+  .terminal .w{color:#e6e6e6;}
+  .CodeMirror{height:auto !important;font-family:'JetBrains Mono',monospace;font-size:13px;border-radius:8px;border:1px solid var(--border);}
+  .CodeMirror-scroll{min-height:0;}
+  .pulse-dot{display:inline-block;width:8px;height:8px;border-radius:999px;background:var(--accent);box-shadow:0 0 8px var(--accent);animation:pulse 1.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.45;transform:scale(.8);}}
+  .flow-dot{animation: flow 2.5s linear infinite;}
+  @keyframes flow{0%{offset-distance:0%;opacity:0;}10%{opacity:1;}90%{opacity:1;}100%{offset-distance:100%;opacity:0;}}
+  .module-link{display:block;padding:8px 10px;border-radius:6px;font-size:13px;color:#bdbdbd;border-left:2px solid transparent;cursor:pointer;}
+  .module-link:hover{background:var(--surface2);color:#fff;}
+  .module-link.active{background:#0a1f15;color:var(--accent);border-left-color:var(--accent);}
+  .module-link.done::before{content:"✓ ";color:var(--accent);font-size:11px;}
+  .module-link.pending::before{content:"○ ";color:#444;font-size:11px;}
+  .block-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#666;padding:14px 10px 6px;}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;transition:all .15s;}
+  .btn:hover{background:var(--surface3);border-color:#444;}
+  .btn-accent{background:var(--accent);color:#001a0d;border-color:var(--accent);}
+  .btn-accent:hover{background:#33ffa3;border-color:#33ffa3;}
+  .btn-ghost{background:transparent;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:#001a0d;color:var(--accent);border:1px solid var(--accent);padding:10px 18px;border-radius:8px;font-size:13px;transition:all .25s;z-index:50;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .badge-basico{background:#003c1a;color:#5fffaa;border:1px solid #00553a;}
+  .badge-inter{background:#3c3000;color:#ffcc55;border:1px solid #554a00;}
+  .badge-avanz{background:#3c0010;color:#ff7799;border:1px solid #551122;}
+  .kbd{font-family:'JetBrains Mono',monospace;background:#222;border:1px solid #333;border-bottom-width:2px;padding:1px 6px;border-radius:4px;font-size:11px;color:#ddd;}
+  details > summary{cursor:pointer;list-style:none;}
+  details > summary::-webkit-details-marker{display:none;}
+  details[open] .accordion-arrow{transform:rotate(90deg);}
+  .accordion-arrow{transition:transform .2s;display:inline-block;}
+  .pipe-stage{transition:all .25s;}
+  .pipe-stage:hover{transform:translateY(-2px);}
+  .pipe-stage:hover .pipe-stage-icon{background:var(--accent);color:#001a0d;box-shadow:0 0 24px var(--accent);}
+  .file-tree{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.9;color:#bbb;}
+  .file-tree .new{color:var(--accent);}
+  table.df{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;font-size:12px;}
+  table.df th,table.df td{border:1px solid #222;padding:5px 8px;text-align:left;}
+  table.df th{background:#0e1a14;color:var(--accent);font-weight:500;}
+  table.df td.cell-data{background:#0e1a0e;}
+  table.df tr.row-fade{opacity:.25;transition:opacity .4s;}
+  table.df tr.row-bad td{background:#2a0f12;color:#ff7788;}
+  .slider-row{display:grid;grid-template-columns:140px 1fr 70px;gap:10px;align-items:center;font-size:12px;}
+  input[type=range]{accent-color:var(--accent);}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-track{background:#0a0a0a;}
+  ::-webkit-scrollbar-thumb{background:#222;border-radius:4px;}
+  ::-webkit-scrollbar-thumb:hover{background:#333;}
+  .quiz-opt{padding:10px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;gap:10px;align-items:flex-start;transition:all .15s;}
+  .quiz-opt:hover{background:var(--surface3);border-color:#444;}
+  .quiz-opt.correct{background:#062b1a;border-color:var(--accent);color:#aaffd0;}
+  .quiz-opt.wrong{background:#2b0b15;border-color:var(--red);color:#ffaabb;}
+  .quiz-opt.disabled{cursor:default;}
+  .fade-in{animation:fadeIn .4s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .progress-bar{height:4px;background:#1a1a1a;border-radius:999px;overflow:hidden;}
+  .progress-bar > div{height:100%;background:linear-gradient(90deg,var(--accent),#0066cc);transition:width .4s;}
+  .copy-btn{position:absolute;top:8px;right:8px;font-size:11px;padding:4px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#aaa;cursor:pointer;z-index:5;}
+  .copy-btn:hover{color:var(--accent);border-color:var(--accent);}
+  .code-wrap{position:relative;}
+  .line-explain{cursor:pointer;}
+  .line-explain:hover{background:#0a1f15;}
+  .legend-dot{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:6px;vertical-align:middle;}
+  .arduino-logo{
+    width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 30% 30%,#33ffa3,#00aa55);position:relative;
+  }
+  .arduino-logo::after{content:"";position:absolute;inset:6px;border:2px solid #001a0d;border-radius:50%;}
+  /* python icon */
+  .ico-pandas,.ico-mpl,.ico-serial,.ico-numpy{width:44px;height:44px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;color:#001a0d;}
+  .ico-pandas{background:linear-gradient(135deg,#ffe55c,#ff8855);}
+  .ico-mpl{background:linear-gradient(135deg,#5da7ff,#3b82f6);}
+  .ico-serial{background:linear-gradient(135deg,#00ff88,#00aa55);}
+  .ico-numpy{background:linear-gradient(135deg,#a78bff,#6b46c1);}
+  /* Mu screenshot zones */
+  .mu-zone{cursor:pointer;transition:all .2s;}
+  .mu-zone:hover{filter:brightness(1.6);}
+  .mu-zone.active{filter:brightness(1.6);}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Sticky banner -->
+<div class="sticky top-0 z-40 border-b border-[var(--border)]" style="background:linear-gradient(90deg,#001a0d,#0a0a0a);">
+  <div class="px-6 py-2.5 flex items-center justify-between text-sm">
+    <div class="flex items-center gap-3">
+      <span class="pulse-dot"></span>
+      <span class="mono accent">🔌 Modo sin Arduino</span>
+      <span class="muted">— trabajando con datos demo. Cuando llegue el hardware, solo cambias una línea.</span>
+    </div>
+    <div class="flex items-center gap-4 text-xs muted">
+      <span>Curso interno · Team Software</span>
+      <span class="chip mono">v1.0</span>
+    </div>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="flex" style="min-height:calc(100vh - 41px);">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="border-r border-[var(--border)] flex-shrink-0 flex flex-col" style="width:300px;background:#080808;">
+    <div class="p-5 border-b border-[var(--border)]">
+      <div class="flex items-center gap-3 mb-1">
+        <div class="arduino-logo"></div>
+        <div>
+          <div class="text-sm font-semibold">Arduino desde Cero</div>
+          <div class="text-[11px] muted mono">Python · Datos · Sin hardware</div>
+        </div>
+      </div>
+      <div class="mt-4">
+        <div class="flex justify-between text-[11px] muted mb-1.5">
+          <span>Progreso total</span>
+          <span><span id="progress-num">0</span>/18</span>
+        </div>
+        <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <nav id="module-nav" class="flex-1 overflow-y-auto py-2"></nav>
+
+    <div class="p-3 border-t border-[var(--border)] space-y-2">
+      <button onclick="openCsvGen()" class="btn w-full justify-center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg>
+        Generador de CSV demo
+      </button>
+      <button onclick="resetProgress()" class="btn btn-ghost w-full justify-center text-[11px] muted">Reiniciar progreso</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main" class="flex-1 overflow-x-hidden">
+    <div id="module-content" class="max-w-[1000px] mx-auto px-10 py-10 fade-in"></div>
+
+    <!-- module footer -->
+    <div class="max-w-[1000px] mx-auto px-10 pb-16 flex items-center justify-between">
+      <button id="prev-btn" class="btn">← Anterior</button>
+      <button id="mark-done" class="btn btn-accent">Marcar como completado ✓</button>
+      <button id="next-btn" class="btn">Siguiente →</button>
+    </div>
+  </main>
+</div>
+
+<!-- CSV Generator modal -->
+<div id="csv-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,.75);">
+  <div class="panel-2 w-[920px] max-w-[95vw] max-h-[90vh] overflow-y-auto p-6">
+    <div class="flex justify-between items-start mb-4">
+      <div>
+        <h2 class="text-lg font-semibold">Generador de CSV demo</h2>
+        <p class="text-xs muted mt-1">Configurá los datos simulados del sensor. Guardalo como <span class="mono accent">datos_demo.csv</span> en <span class="mono">proyecto_riego/</span></p>
+      </div>
+      <button onclick="closeCsvGen()" class="btn">✕</button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-6">
+      <div class="space-y-4">
+        <div class="slider-row"><label>Filas</label><input id="g-rows" type="range" min="10" max="500" value="40" /><span class="mono accent" id="g-rows-v">40</span></div>
+        <div class="slider-row"><label>Humedad inicial</label><input id="g-hum" type="range" min="400" max="900" value="720" /><span class="mono accent" id="g-hum-v">720</span></div>
+        <div class="slider-row"><label>Variación / lectura</label><input id="g-var" type="range" min="5" max="50" value="12" /><span class="mono accent" id="g-var-v">12</span></div>
+        <div class="slider-row"><label>Temp. media (°C)</label><input id="g-temp" type="range" min="15" max="35" value="23" /><span class="mono accent" id="g-temp-v">23</span></div>
+        <div class="slider-row"><label>Umbral riego</label><input id="g-thr" type="range" min="400" max="700" value="500" /><span class="mono accent" id="g-thr-v">500</span></div>
+        <div class="slider-row"><label>Intervalo</label>
+          <select id="g-int" class="bg-[var(--surface2)] border border-[var(--border)] rounded px-2 py-1 text-xs mono">
+            <option value="1">1 s</option><option value="5" selected>5 s</option>
+            <option value="30">30 s</option><option value="60">1 min</option><option value="300">5 min</option>
+          </select>
+          <span></span>
+        </div>
+
+        <div class="flex gap-2 pt-3">
+          <button onclick="genCsv()" class="btn btn-accent">⚡ Generar</button>
+          <button onclick="copyCsv()" class="btn">📋 Copiar CSV</button>
+          <button onclick="downloadCsv()" class="btn">⬇️ Descargar</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="text-xs muted mb-2">Preview (primeras 10 filas)</div>
+        <div id="csv-preview" class="overflow-x-auto" style="max-height:280px;"></div>
+        <p class="text-[11px] muted mt-3">💡 Guardá este archivo como <span class="mono accent">datos_demo.csv</span> en tu carpeta del proyecto.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">Copiado</div>
+
+<!-- =========================================================== -->
+<!-- DATA: 16 modules                                              -->
+<!-- =========================================================== -->
+<script>
+const BLOCKS = [
+  { id:'b1', title:'Bloque 1 · El entorno de trabajo' },
+  { id:'b2', title:'Bloque 2 · Datos demo: trabajá sin Arduino' },
+  { id:'b3', title:'Bloque 3 · Scripts paso a paso' },
+  { id:'b4', title:'Bloque 4 · Scrum del team Software' },
+];
+
+const MODULES = [
+  // BLOQUE 1
+  { id:'m1.1', block:'b1', num:'1.1', title:'¿Por qué Python para Arduino?', level:'basico' },
+  { id:'m1.2', block:'b1', num:'1.2', title:'Instalación del IDE: Mu Editor', level:'basico' },
+  { id:'m1.3', block:'b1', num:'1.3', title:'La interfaz de Mu Editor', level:'basico' },
+  { id:'m1.4', block:'b1', num:'1.4', title:'Los datos que manda Arduino', level:'basico' },
+  // BLOQUE 2
+  { id:'m2.1', block:'b2', num:'2.1', title:'Crear el CSV de datos demo', level:'basico' },
+  { id:'m2.2', block:'b2', num:'2.2', title:'Librerías: pandas, matplotlib, numpy, pyserial', level:'basico' },
+  { id:'m2.3', block:'b2', num:'2.3', title:'Python desde cero: lo que necesitás', level:'inter' },
+  { id:'m2.4', block:'b2', num:'2.4', title:'Autoevaluación Bloque 2', level:'inter' },
+  // BLOQUE 3
+  { id:'m3.1', block:'b3', num:'3.1', title:'Script 1 · Leer y explorar (EDA)', level:'inter' },
+  { id:'m3.2', block:'b3', num:'3.2', title:'Script 2 · Limpieza de datos', level:'inter' },
+  { id:'m3.3', block:'b3', num:'3.3', title:'Script 3 · Graficar con matplotlib', level:'inter' },
+  { id:'m3.4', block:'b3', num:'3.4', title:'Script 4 · Conectar el Arduino real', level:'avanz' },
+  { id:'m3.5', block:'b3', num:'3.5', title:'Script 5 · Dashboard en tiempo real', level:'avanz' },
+  { id:'m3.6', block:'b3', num:'3.6', title:'Autoevaluación final + Proyecto', level:'avanz' },
+  // BLOQUE 4 · Scrum
+  { id:'m4.1', block:'b4', num:'4.1', title:'Backlog & historias de usuario', level:'basico' },
+  { id:'m4.2', block:'b4', num:'4.2', title:'Sprintboard Kanban', level:'basico' },
+  { id:'m4.3', block:'b4', num:'4.3', title:'Daily standup', level:'basico' },
+  { id:'m4.4', block:'b4', num:'4.4', title:'Sprint Review + Retrospectiva', level:'basico' },
+];
+
+// state
+const STATE = {
+  current: 'm1.1',
+  done: JSON.parse(localStorage.getItem('arduino_done')||'{}'),
+  notes: JSON.parse(localStorage.getItem('arduino_notes')||'{}'),
+  quiz:  JSON.parse(localStorage.getItem('arduino_quiz')||'{}'),
+  installCheck: JSON.parse(localStorage.getItem('arduino_install')||'{}'),
+  scrum: JSON.parse(localStorage.getItem('arduino_scrum')||'{}'),
+};
+
+// Init scrum substate
+STATE.scrum.stories = STATE.scrum.stories || null;  // set on first load
+STATE.scrum.dailies = STATE.scrum.dailies || [];
+STATE.scrum.review  = STATE.scrum.review  || {};
+STATE.scrum.retro   = STATE.scrum.retro   || {};
+
+function saveState(){
+  localStorage.setItem('arduino_done', JSON.stringify(STATE.done));
+  localStorage.setItem('arduino_notes', JSON.stringify(STATE.notes));
+  localStorage.setItem('arduino_quiz', JSON.stringify(STATE.quiz));
+  localStorage.setItem('arduino_install', JSON.stringify(STATE.installCheck));
+  localStorage.setItem('arduino_scrum', JSON.stringify(STATE.scrum));
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1800);
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); toast('📋 Copiado al portapapeles'); }
+  catch{ toast('No se pudo copiar'); }
+}
+
+function badge(level){
+  if(level==='basico') return `<span class="chip badge-basico">🟢 Básico</span>`;
+  if(level==='inter')  return `<span class="chip badge-inter">🟡 Intermedio</span>`;
+  return `<span class="chip badge-avanz">🔴 Avanzado</span>`;
+}
+
+// Sidebar render
+function renderSidebar(){
+  const nav=document.getElementById('module-nav');
+  let html='';
+  for(const b of BLOCKS){
+    html += `<div class="block-label">${b.title}</div>`;
+    for(const m of MODULES.filter(x=>x.block===b.id)){
+      const cls = m.id===STATE.current ? 'active' : '';
+      const done = STATE.done[m.id] ? 'done' : 'pending';
+      html += `<div class="module-link ${cls} ${done}" onclick="goTo('${m.id}')">
+        <div class="flex items-center justify-between">
+          <span><span class="mono muted">${m.num}</span>  ${m.title}</span>
+        </div>
+      </div>`;
+    }
+  }
+  nav.innerHTML=html;
+  const doneCount = Object.values(STATE.done).filter(Boolean).length;
+  document.getElementById('progress-num').textContent = doneCount;
+  document.getElementById('progress-fill').style.width = ((doneCount/MODULES.length)*100).toFixed(1)+'%';
+}
+
+function goTo(id){
+  STATE.current=id;
+  renderSidebar();
+  renderModule(id);
+  document.getElementById('main').scrollTo({top:0,behavior:'smooth'});
+}
+function nextModule(){
+  const idx=MODULES.findIndex(m=>m.id===STATE.current);
+  if(idx<MODULES.length-1) goTo(MODULES[idx+1].id);
+}
+function prevModule(){
+  const idx=MODULES.findIndex(m=>m.id===STATE.current);
+  if(idx>0) goTo(MODULES[idx-1].id);
+}
+function markDone(){
+  STATE.done[STATE.current]=true;
+  saveState();
+  renderSidebar();
+  toast('✓ Módulo completado');
+  setTimeout(nextModule, 500);
+}
+function resetProgress(){
+  if(!confirm('¿Reiniciar todo el progreso?')) return;
+  STATE.done={}; STATE.notes={}; STATE.quiz={}; STATE.installCheck={};
+  saveState(); renderSidebar(); renderModule(STATE.current);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('next-btn').onclick=nextModule;
+  document.getElementById('prev-btn').onclick=prevModule;
+  document.getElementById('mark-done').onclick=markDone;
+  renderSidebar();
+  renderModule(STATE.current);
+  genCsv();
+});
+
+// CodeMirror helper
+function attachCM(id, code, mode='python'){
+  const el=document.getElementById(id);
+  if(!el) return;
+  const cm = CodeMirror(el, {
+    value: code, mode, theme:'dracula', lineNumbers:true, readOnly:false,
+    indentUnit:4, viewportMargin: Infinity,
+  });
+  return cm;
+}
+function codeBlock(id, code, mode='python'){
+  // mode: python | text | csv | json
+  return `<div class="code-wrap mb-3">
+    <button class="copy-btn" onclick='copyText(\`${code.replace(/`/g,'\\`').replace(/\$/g,'\\$')}\`)'>📋 Copiar</button>
+    <div id="${id}"></div>
+  </div>`;
+}
+function renderCodeBlocks(blocks){
+  for(const b of blocks){ attachCM(b.id, b.code, b.mode||'python'); }
+}
+</script>
+
+<!-- =========================================================== -->
+<!-- MODULE RENDERER                                               -->
+<!-- =========================================================== -->
+<script>
+
+function moduleHeader(m){
+  return `
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-xs mono muted">Módulo ${m.num} · ${BLOCKS.find(b=>b.id===m.block).title.split('·')[1].trim()}</div>
+      ${badge(m.level)}
+    </div>
+    <h1 class="text-3xl font-semibold mb-1 tracking-tight">${m.title}</h1>
+    <div class="h-px bg-[var(--border)] my-6"></div>
+  `;
+}
+
+function notesPanel(id){
+  const val=(STATE.notes[id]||'').replace(/</g,'&lt;');
+  return `
+    <div class="panel p-4 mt-8">
+      <div class="flex items-center gap-2 mb-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        <span class="text-sm">Mis notas</span>
+        <span class="text-[10px] muted">(se guardan automáticamente)</span>
+      </div>
+      <textarea oninput="STATE.notes['${id}']=this.value;saveState();" placeholder="Escribí tus notas sobre este módulo..."
+        class="w-full bg-[var(--surface2)] border border-[var(--border)] rounded p-3 text-sm font-mono"
+        style="min-height:80px;resize:vertical;">${val}</textarea>
+    </div>`;
+}
+
+function renderModule(id){
+  const m=MODULES.find(x=>x.id===id);
+  if(!m) return;
+  const out = document.getElementById('module-content');
+  out.classList.remove('fade-in'); void out.offsetWidth; out.classList.add('fade-in');
+  out.innerHTML = MOD_BODY[id](m) + notesPanel(id);
+  // attach all queued CM blocks
+  if(window._cmQueue){ renderCodeBlocks(window._cmQueue); window._cmQueue=[]; }
+  // attach module-specific JS hooks
+  if(MOD_AFTER[id]) MOD_AFTER[id]();
+}
+
+window._cmQueue=[];
+function cm(id, code, mode='python'){
+  window._cmQueue.push({id,code,mode});
+  return `<div class="code-wrap mb-3"><button class="copy-btn" data-copy="${id}">📋 Copiar</button><div id="${id}"></div></div>`;
+}
+
+const MOD_BODY = {};
+const MOD_AFTER = {};
+
+/* ---------- MOD 1.1 ---------- */
+MOD_BODY['m1.1'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">El Arduino lee el mundo físico. Python interpreta esos datos, los guarda y los grafica. Acá vemos cómo se conectan estas dos piezas.</p>
+
+<!-- Pipeline -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs muted mb-4 mono">PIPELINE COMPLETO</div>
+  <div class="flex items-center justify-between gap-2">
+    ${['Sensor','Arduino','USB / Serial','Python','CSV','Gráfico'].map((s,i)=>`
+      <div class="pipe-stage flex flex-col items-center text-center" style="flex:1">
+        <div class="pipe-stage-icon w-12 h-12 rounded-full border border-[var(--border)] flex items-center justify-center mb-2 transition-all" style="background:#0e0e0e">
+          ${['🌡️','🔌','🔗','🐍','📄','📈'][i]}
+        </div>
+        <div class="text-[11px] mono accent">${s}</div>
+      </div>
+      ${i<5?`<div class="text-[var(--accent)] text-xl pb-6">→</div>`:''}
+    `).join('')}
+  </div>
+  <div class="mt-5 p-3 rounded text-[12px] mono" style="background:#0a1f15;color:#9affc8;border:1px solid #003322;">
+    💬 "El Arduino manda datos, Python los interpreta, guarda y visualiza."
+  </div>
+</div>
+
+<!-- Comparativa -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+  <div class="panel p-5">
+    <div class="flex items-center gap-2 mb-3"><div class="arduino-logo"></div><div class="font-semibold">Arduino hace</div></div>
+    <ul class="space-y-2 text-sm muted">
+      <li>• Leer sensores (humedad, temperatura, luz...)</li>
+      <li>• Controlar actuadores (bomba, motor, LEDs)</li>
+      <li>• Enviar números por el cable USB</li>
+      <li>• Decisiones simples y rápidas</li>
+    </ul>
+  </div>
+  <div class="panel p-5">
+    <div class="flex items-center gap-2 mb-3"><div style="font-size:22px">🐍</div><div class="font-semibold">Python hace</div></div>
+    <ul class="space-y-2 text-sm muted">
+      <li>• Leer y guardar los datos en CSV</li>
+      <li>• Limpiar / filtrar / promediar</li>
+      <li>• Hacer gráficos y dashboards</li>
+      <li>• Reportes y análisis estadístico</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Tip -->
+<div class="panel p-4 mb-6 flex gap-3" style="background:#0e1a14;">
+  <div style="font-size:22px">💡</div>
+  <div>
+    <div class="font-semibold text-sm mb-0.5">Por ahora simulamos los datos.</div>
+    <div class="text-sm muted">Cuando llegue el hardware, en el script vas a cambiar exactamente <span class="mono accent">pd.read_csv("datos_demo.csv")</span> por <span class="mono accent">serial.Serial("COM3", 9600)</span>. Una sola línea.</div>
+  </div>
+</div>
+`;
+
+/* ---------- MOD 1.2 ---------- */
+MOD_BODY['m1.2'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Mu Editor es un IDE simple y enfocado, diseñado para enseñar. Ya viene con <span class="mono accent">pyserial</span> instalado y tiene Serial Monitor + Plotter integrados — perfecto para Arduino.</p>
+
+<!-- Mu vs Thonny -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-4">¿POR QUÉ MU Y NO THONNY?</div>
+  <div class="grid grid-cols-2 gap-4">
+    <div class="panel-2 p-4">
+      <div class="font-semibold text-sm mb-2">Thonny <span class="text-[10px] muted">(el que ya conocés)</span></div>
+      <ul class="text-xs muted space-y-1.5">
+        <li>✓ Excelente para aprender Python</li>
+        <li>✗ Sin Serial Monitor integrado</li>
+        <li>✗ Sin Plotter en tiempo real</li>
+        <li>✗ Hay que instalar pyserial aparte</li>
+      </ul>
+    </div>
+    <div class="panel-2 p-4" style="border-color:#00553a;">
+      <div class="font-semibold text-sm mb-2 accent">Mu Editor</div>
+      <ul class="text-xs space-y-1.5" style="color:#cfe">
+        <li class="accent">✓ Serial Monitor integrado</li>
+        <li class="accent">✓ Plotter en tiempo real</li>
+        <li class="accent">✓ pyserial preinstalado</li>
+        <li class="accent">✓ Interfaz limpia, sin distracciones</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Timeline instalación -->
+<div class="text-xs mono muted mb-3">INSTALACIÓN EN WINDOWS</div>
+${[
+  {n:1, t:'Descargar el instalador', d:'Ir a <span class="mono accent">codewith.mu/en/download</span> y bajar la versión para Windows.', ico:'🌐'},
+  {n:2, t:'Ejecutar el instalador', d:'Doble click al <span class="mono">.exe</span>. Apretá "Next" en todo. No requiere permisos de admin.', ico:'⚙️'},
+  {n:3, t:'Seleccionar modo "Python 3"', d:'Al abrir Mu por primera vez te pregunta el modo. Elegí <span class="mono accent">Python 3</span>.', ico:'🐍'},
+  {n:4, t:'Verificar', d:'Escribí <span class="mono accent">print("Hola Arduino")</span> y apretá Run. Tiene que aparecer en el REPL.', ico:'✅'},
+].map(s=>`
+<details class="panel mb-2" ${s.n===1?'open':''}>
+  <summary class="p-4 flex items-center gap-3">
+    <span class="accordion-arrow accent">›</span>
+    <div class="w-7 h-7 rounded-full accent flex items-center justify-center text-xs mono" style="background:#0a1f15;border:1px solid var(--accent)">${s.n}</div>
+    <div class="flex-1 font-medium text-sm">${s.t}</div>
+    <span class="text-xl">${s.ico}</span>
+    <input type="checkbox" ${STATE.installCheck['s'+s.n]?'checked':''}
+       onclick="event.stopPropagation();STATE.installCheck['s${s.n}']=this.checked;saveState();"
+       class="w-4 h-4 accent-[var(--accent)]"/>
+  </summary>
+  <div class="px-5 pb-5 pt-1 text-sm muted">${s.d}</div>
+</details>
+`).join('')}
+
+<!-- Troubleshooting -->
+<div class="text-xs mono muted mb-3 mt-8">SI ALGO FALLA</div>
+${[
+  {q:'Mu no abre / pantalla negra al iniciar', a:'Borrá la carpeta <span class="mono">C:\\Users\\TuUser\\mu_code</span> y volvé a abrir. Mu la recrea.'},
+  {q:'Error "Python interpreter not found"', a:'Reinstalá Mu como Administrador. Asegurate de cerrar antivirus tipo Avast durante la instalación.'},
+  {q:'pip install no funciona desde Mu', a:'Mu tiene su propio entorno. Abrí <strong>Terminal</strong> dentro de Mu (botón en la barra) y usá <span class="mono accent">pip install nombre</span> ahí.'},
+].map(t=>`
+<details class="panel mb-2">
+  <summary class="p-3 flex items-center gap-3 text-sm">
+    <span class="accordion-arrow muted">›</span>
+    <span class="text-[var(--red)]">⚠</span>
+    <span>${t.q}</span>
+  </summary>
+  <div class="px-5 pb-4 text-sm muted">${t.a}</div>
+</details>`).join('')}
+`;
+
+/* ---------- MOD 1.3 ---------- */
+MOD_BODY['m1.3'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Click en cada zona del editor para ver qué hace y cuándo se usa.</p>
+
+<div class="panel p-4 mb-6">
+  <!-- SVG interactivo de la interfaz de Mu -->
+  <svg viewBox="0 0 800 480" class="w-full" style="background:#1e1e1e;border-radius:6px;">
+    <!-- Toolbar -->
+    <rect class="mu-zone" data-zone="1" x="0" y="0" width="800" height="64" fill="#2a2a2a" />
+    <g pointer-events="none">
+      ${['New','Load','Save','Run','Stop','REPL','Plotter','Mode'].map((t,i)=>`
+        <rect x="${10+i*72}" y="10" width="64" height="44" rx="4" fill="#1a1a1a" stroke="#444"/>
+        <circle cx="${42+i*72}" cy="26" r="7" fill="${['#5cf','#6c8','#fb5','#5f8','#f55','#fa3','#5af','#aaa'][i]}"/>
+        <text x="${42+i*72}" y="50" fill="#aaa" font-size="10" text-anchor="middle" font-family="monospace">${t}</text>
+      `).join('')}
+    </g>
+    <!-- Mode selector hint top right -->
+    <rect class="mu-zone" data-zone="6" x="700" y="8" width="90" height="48" fill="#2a2a2a"/>
+    <text x="745" y="30" fill="#00ff88" font-size="11" font-family="monospace" text-anchor="middle" pointer-events="none">Python 3</text>
+    <text x="745" y="46" fill="#888" font-size="9" font-family="monospace" text-anchor="middle" pointer-events="none">▼ modo</text>
+    
+    <!-- Editor -->
+    <rect class="mu-zone" data-zone="2" x="0" y="64" width="800" height="280" fill="#1e1e1e"/>
+    <g pointer-events="none" font-family="monospace" font-size="13">
+      ${[
+        ['1','import pandas as pd', '#c678dd'],
+        ['2','',''],
+        ['3','df = pd.read_csv("datos.csv")', '#abb2bf'],
+        ['4','print(df.head())', '#abb2bf'],
+        ['5','',''],
+        ['6','# umbral de riego', '#5c6370'],
+        ['7','UMBRAL = 500', '#abb2bf'],
+        ['8','',''],
+        ['9','for fila in df.itertuples():', '#c678dd'],
+        ['10','    if fila.humedad < UMBRAL:', '#c678dd'],
+        ['11','        print("Activar bomba")', '#abb2bf'],
+      ].map(([n,txt,c],i)=>`
+        <text x="14" y="${94+i*22}" fill="#555" text-anchor="end">${n}</text>
+        <text x="28" y="${94+i*22}" fill="${c||'#aaa'}">${txt}</text>
+      `).join('')}
+    </g>
+    <!-- REPL -->
+    <rect class="mu-zone" data-zone="3" x="0" y="344" width="800" height="120" fill="#000"/>
+    <g pointer-events="none" font-family="monospace" font-size="12" fill="#00ff88">
+      <text x="14" y="368">&gt;&gt;&gt; print("Hola Arduino")</text>
+      <text x="14" y="386" fill="#aaa">Hola Arduino</text>
+      <text x="14" y="406">&gt;&gt;&gt; df.head()</text>
+      <text x="14" y="424" fill="#aaa">   humedad  temperatura  bomba</text>
+      <text x="14" y="442" fill="#aaa">0      720         22.3      0</text>
+    </g>
+    <!-- Serial button highlight -->
+    <rect class="mu-zone" data-zone="4" x="370" y="10" width="64" height="44" fill="transparent" stroke="#00ff88" stroke-dasharray="4 4"/>
+    <rect class="mu-zone" data-zone="5" x="442" y="10" width="64" height="44" fill="transparent" stroke="#3b82f6" stroke-dasharray="4 4"/>
+  </svg>
+
+  <div id="zone-info" class="panel-2 p-4 mt-4 text-sm muted">
+    👆 Hacé click en cualquier zona del editor para ver qué hace.
+  </div>
+</div>
+`;
+MOD_AFTER['m1.3'] = () => {
+  const INFO = {
+    1: ['Barra de herramientas','Acceso rápido a New, Load, Save, <span class="accent">Run</span> (ejecuta), <span class="accent">Stop</span>, REPL, Plotter y selector de modo. <strong>Run</strong> y <strong>REPL</strong> son los botones que vas a usar el 90% del tiempo.'],
+    2: ['Editor de código','Acá escribís Python con syntax highlighting (colores). Mu indenta automáticamente con 4 espacios. <span class="kbd">Ctrl</span>+<span class="kbd">/</span> comenta líneas, <span class="kbd">F5</span> ejecuta.'],
+    3: ['REPL / Consola','Salida de tus <span class="mono accent">print()</span> y errores. También es un intérprete: podés escribir Python directamente para experimentar sin guardar.'],
+    4: ['Botón Serial','Abre el monitor serial — muestra los datos crudos que manda el Arduino. <strong>Por ahora gris</strong> porque no hay Arduino conectado. Cuando enchufes el cable USB, se ilumina.'],
+    5: ['Botón Plotter','Grafica en tiempo real los <strong>números</strong> que llegan por Serial. Si tu Arduino imprime <span class="mono accent">650,23.5</span>, Mu dibuja dos líneas. Ideal para ver tendencias del sensor.'],
+    6: ['Selector de modo','Mu cambia su comportamiento según el modo: <strong>Python 3</strong> (lo que usamos), CircuitPython, BBC micro:bit, PyGame Zero. Si lo cambiás sin querer, volvé a Python 3 con este botón.'],
+  };
+  document.querySelectorAll('.mu-zone').forEach(z=>{
+    z.addEventListener('click',()=>{
+      document.querySelectorAll('.mu-zone').forEach(x=>x.classList.remove('active'));
+      z.classList.add('active');
+      const [t,d] = INFO[z.dataset.zone];
+      document.getElementById('zone-info').innerHTML = `<div class="font-semibold accent mb-1">${t}</div><div>${d}</div>`;
+    });
+  });
+};
+
+/* ---------- MOD 1.4 ---------- */
+MOD_BODY['m1.4'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">El Arduino manda datos por el puerto Serial — un canal de comunicación por el cable USB. Cada línea es una lectura del sensor. Hay 3 formatos comunes:</p>
+
+<!-- Formato 1 -->
+<div class="panel p-5 mb-4">
+  <div class="flex items-center justify-between mb-3">
+    <div><span class="chip mono">Formato 1</span> <span class="font-semibold ml-2">Valor simple</span></div>
+    <span class="text-[11px] muted">un número por línea</span>
+  </div>
+  ${cm('fmt1','650\n312\n489\n720\n658','text')}
+  <div class="grid grid-cols-2 gap-3 mt-3 text-xs">
+    <div class="panel-2 p-3"><div class="accent mb-1">✓ Ventaja</div><div class="muted">Súper simple, ideal para 1 sensor.</div></div>
+    <div class="panel-2 p-3"><div class="text-[var(--red)] mb-1">✗ Desventaja</div><div class="muted">No sabés qué sensor es. Si agregás otro, no podés distinguirlos.</div></div>
+  </div>
+</div>
+
+<!-- Formato 2 -->
+<div class="panel p-5 mb-4" style="border-color:#00553a;">
+  <div class="flex items-center justify-between mb-3">
+    <div><span class="chip" style="background:#003c1a;color:#5fffaa;border-color:#00553a;">Formato 2 · usado en este proyecto</span> <span class="font-semibold ml-2">CSV inline</span></div>
+    <span class="text-[11px] accent">⭐ recomendado</span>
+  </div>
+  ${cm('fmt2','humedad,temperatura,bomba\n650,23.5,0\n312,24.1,1\n489,23.8,0\n720,22.3,0','text')}
+  <div class="grid grid-cols-2 gap-3 mt-3 text-xs">
+    <div class="panel-2 p-3"><div class="accent mb-1">✓ Ventaja</div><div class="muted">Múltiples valores en cada lectura, fácil de leer con <span class="mono">.split(",")</span>.</div></div>
+    <div class="panel-2 p-3"><div class="text-[var(--red)] mb-1">✗ Desventaja</div><div class="muted">Si cambia el orden o agregás campos, se rompe.</div></div>
+  </div>
+</div>
+
+<!-- Formato 3 -->
+<div class="panel p-5 mb-4">
+  <div class="flex items-center justify-between mb-3">
+    <div><span class="chip mono">Formato 3</span> <span class="font-semibold ml-2">JSON</span></div>
+    <span class="text-[11px] muted">moderno, autodescriptivo</span>
+  </div>
+  ${cm('fmt3','{"humedad": 650, "temperatura": 23.5, "bomba": 0}\n{"humedad": 312, "temperatura": 24.1, "bomba": 1}','text')}
+  <div class="grid grid-cols-2 gap-3 mt-3 text-xs">
+    <div class="panel-2 p-3"><div class="accent mb-1">✓ Ventaja</div><div class="muted">Los nombres viajan con los datos. Robusto al orden.</div></div>
+    <div class="panel-2 p-3"><div class="text-[var(--red)] mb-1">✗ Desventaja</div><div class="muted">Más bytes por mensaje, parser más pesado en Arduino.</div></div>
+  </div>
+</div>
+
+<div class="panel p-4 mt-6" style="background:#0a1f15;border-color:#00553a;">
+  <div class="text-sm"><span class="accent font-semibold">Conclusión:</span> en este curso usamos <span class="mono accent">CSV inline</span>. Es el más simple, se lee con pandas en una línea, y nos alcanza para el proyecto de riego.</div>
+</div>
+`;
+
+/* ---------- MOD 2.1 ---------- */
+MOD_BODY['m2.1'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Así se ven los datos reales del sensor de humedad + temperatura. Vas a generar un archivo CSV demo para practicar sin Arduino.</p>
+
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">ESTRUCTURA DEL CSV</div>
+  ${cm('csv-sample',`timestamp,humedad,temperatura,bomba_activa
+2024-01-15 08:00:00,720,22.3,0
+2024-01-15 08:00:05,715,22.4,0
+2024-01-15 08:00:10,710,22.5,0
+2024-01-15 08:00:15,702,22.6,0
+2024-01-15 08:00:20,695,22.6,0
+2024-01-15 08:00:25,680,22.7,0
+2024-01-15 08:00:30,650,22.8,0
+2024-01-15 08:00:35,612,22.9,0
+2024-01-15 08:00:40,560,23.0,0
+2024-01-15 08:00:45,520,23.1,0
+2024-01-15 08:00:50,490,23.2,1
+2024-01-15 08:00:55,468,23.2,1
+2024-01-15 08:01:00,510,23.1,1
+2024-01-15 08:01:05,580,22.9,0
+2024-01-15 08:01:10,640,22.8,0
+2024-01-15 08:01:15,690,22.7,0
+2024-01-15 08:01:20,718,22.6,0`,'text')}
+  <p class="text-xs muted mt-2">Notá: cuando <span class="mono">humedad &lt; 500</span> la bomba se activa (<span class="mono accent">1</span>) y la humedad sube.</p>
+</div>
+
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">GENERADOR INTERACTIVO</div>
+    <button class="btn btn-accent" onclick="openCsvGen()">⚡ Abrir generador completo</button>
+  </div>
+  <p class="text-sm muted">El generador del sidebar te deja configurar filas, rangos y umbrales. Generá un CSV, copialo, y guardalo como <span class="mono accent">datos_demo.csv</span> en tu carpeta del proyecto.</p>
+</div>
+
+<div class="panel p-5">
+  <div class="text-xs mono muted mb-3">ESTRUCTURA DE CARPETAS RECOMENDADA</div>
+  <div class="file-tree">
+📁 proyecto_riego/
+├── 📄 <span class="new">datos_demo.csv</span>       <span class="muted">← generado en este módulo</span>
+├── 📄 leer_arduino.py      <span class="muted">← Módulo 3.1</span>
+├── 📄 limpiar.py           <span class="muted">← Módulo 3.2</span>
+├── 📄 graficar.py          <span class="muted">← Módulo 3.3</span>
+├── 📄 dashboard.py         <span class="muted">← Módulo 3.5</span>
+└── 📁 graficos/            <span class="muted">← se crea solo al graficar</span>
+  </div>
+</div>
+`;
+
+/* ---------- MOD 2.2 ---------- */
+MOD_BODY['m2.2'] = (m) => `
+${moduleHeader(m)}
+
+<!-- Qué es una librería -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-2">PRIMERO LO PRIMERO</div>
+  <h2 class="text-xl font-semibold mb-3">¿Qué es una librería?</h2>
+  <p class="text-sm mb-4">Imaginá que querés cocinar una pizza. Podés:</p>
+  <div class="grid grid-cols-2 gap-3 mb-4">
+    <div class="panel-2 p-4">
+      <div class="text-xs muted mb-1">Opción A · desde cero</div>
+      <div class="text-sm">Cultivar el trigo, ordeñar la vaca para el queso, plantar tomates...</div>
+      <div class="text-[11px] mt-3" style="color:#ff7788">🐢 Tardás <strong>meses</strong></div>
+    </div>
+    <div class="panel-2 p-4" style="border-color:#00553a;">
+      <div class="text-xs accent mb-1">Opción B · usar lo que ya existe</div>
+      <div class="text-sm">Comprás harina, queso y salsa <em>ya hechos</em>. Vos solo armás la pizza.</div>
+      <div class="text-[11px] mt-3 accent">⚡ Tardás <strong>30 min</strong></div>
+    </div>
+  </div>
+  <div class="panel-2 p-4" style="background:#0a1f15;">
+    <div class="text-sm"><strong class="accent">Una librería</strong> es como esos ingredientes ya preparados: código que otra persona ya escribió, probó y publicó, y que vos podés <em>usar</em> sin volver a escribirlo. Cuando hacés <span class="mono accent">import pandas</span> es como decir "traeme la caja de pandas a mi cocina".</div>
+  </div>
+</div>
+
+<!-- Por qué no podemos hacer todo con Python a secas -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">¿Y POR QUÉ NO USAMOS SOLO PYTHON?</div>
+  <p class="text-sm mb-3">Python "a secas" sabe hacer cosas básicas: variables, listas, <span class="mono">if</span>, <span class="mono">for</span>, funciones. Pero para leer un CSV con miles de filas, o dibujar un gráfico, tendrías que escribir <strong>cientos de líneas</strong> de código. Con librerías lo hacés en 3.</p>
+  <div class="grid grid-cols-2 gap-3 text-xs">
+    <div class="panel-2 p-3">
+      <div class="muted mb-1">Sin librería — leer un CSV:</div>
+      <pre class="mono" style="color:#ff7788">archivo = open("d.csv")
+for linea in archivo:
+    partes = linea.split(",")
+    # ...50 líneas más
+    # convertir números, manejar errores,
+    # detectar columnas, etc.</pre>
+    </div>
+    <div class="panel-2 p-3" style="border-color:#00553a;">
+      <div class="accent mb-1">Con pandas — lo mismo:</div>
+      <pre class="mono accent">df = pd.read_csv("d.csv")</pre>
+      <div class="muted mt-3 text-[11px]">Una línea. Listo.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Las 4 librerías del proyecto -->
+<div class="text-xs mono muted mb-3">LAS 4 LIBRERÍAS DE ESTE PROYECTO</div>
+
+<div class="panel p-5 mb-4">
+  <div class="flex items-start gap-4">
+    <div class="ico-pandas flex-shrink-0">🐼</div>
+    <div class="flex-1">
+      <div class="flex items-baseline gap-2 mb-1">
+        <span class="font-semibold mono accent text-lg">pandas</span>
+        <span class="text-xs muted">se pronuncia "pándas"</span>
+      </div>
+      <div class="text-sm mb-3"><strong>¿Para qué sirve?</strong> Para manejar <em>tablas</em> de datos. Filas y columnas, como una hoja de Excel.</div>
+      <div class="panel-2 p-3 mb-3">
+        <div class="text-[11px] muted mb-1">🍕 Analogía</div>
+        <div class="text-sm">Pandas es <strong>Excel adentro de tu programa</strong>. Podés abrir un CSV, ordenar, filtrar, sumar columnas, sacar promedios... pero todo escribiendo código en vez de hacer click.</div>
+      </div>
+      <div class="text-xs muted">Ejemplo de lo que vas a hacer con pandas:</div>
+      <pre class="mono text-xs mt-2 panel-2 p-2"><span style="color:#5da7ff">df</span> = <span style="color:#00ff88">pd.read_csv</span>(<span style="color:#ffcc55">"datos.csv"</span>)
+<span style="color:#5da7ff">df</span>[<span style="color:#ffcc55">"humedad"</span>].mean()  <span class="muted"># promedio</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="panel p-5 mb-4">
+  <div class="flex items-start gap-4">
+    <div class="ico-mpl flex-shrink-0">📊</div>
+    <div class="flex-1">
+      <div class="flex items-baseline gap-2 mb-1">
+        <span class="font-semibold mono accent text-lg">matplotlib</span>
+        <span class="text-xs muted">"mat-plot-lib" (lib de gráficos matemáticos)</span>
+      </div>
+      <div class="text-sm mb-3"><strong>¿Para qué sirve?</strong> Para <em>dibujar gráficos</em>: líneas, barras, círculos, dispersión. Todo lo que veas en un informe científico.</div>
+      <div class="panel-2 p-3 mb-3">
+        <div class="text-[11px] muted mb-1">🍕 Analogía</div>
+        <div class="text-sm">Es el <strong>botón "Gráfico"</strong> de Excel, pero programable. Vos le decís "dibujame esta lista de números como una línea azul" y matplotlib la dibuja.</div>
+      </div>
+      <pre class="mono text-xs mt-2 panel-2 p-2"><span style="color:#00ff88">plt.plot</span>([<span style="color:#ffcc55">1</span>,<span style="color:#ffcc55">3</span>,<span style="color:#ffcc55">2</span>,<span style="color:#ffcc55">5</span>,<span style="color:#ffcc55">7</span>])
+<span style="color:#00ff88">plt.show</span>()  <span class="muted"># aparece una ventana con el gráfico</span></pre>
+    </div>
+  </div>
+</div>
+
+<div class="panel p-5 mb-4">
+  <div class="flex items-start gap-4">
+    <div class="ico-numpy flex-shrink-0">🧮</div>
+    <div class="flex-1">
+      <div class="flex items-baseline gap-2 mb-1">
+        <span class="font-semibold mono accent text-lg">numpy</span>
+        <span class="text-xs muted">"nám-pai" (Numerical Python)</span>
+      </div>
+      <div class="text-sm mb-3"><strong>¿Para qué sirve?</strong> Para hacer <em>cuentas con muchos números a la vez</em>: promedios, máximos, sumas, desviaciones.</div>
+      <div class="panel-2 p-3 mb-3">
+        <div class="text-[11px] muted mb-1">🍕 Analogía</div>
+        <div class="text-sm">Es una <strong>calculadora científica con esteroides</strong>. En vez de sumar un número por vez, le pasás <em>toda una lista</em> y te devuelve el resultado al instante.</div>
+      </div>
+      <pre class="mono text-xs mt-2 panel-2 p-2">temperaturas = [<span style="color:#ffcc55">22</span>,<span style="color:#ffcc55">23</span>,<span style="color:#ffcc55">21</span>,<span style="color:#ffcc55">25</span>]
+<span style="color:#00ff88">np.mean</span>(temperaturas)  <span class="muted"># 22.75 — promedio de un saque</span></pre>
+      <p class="text-[11px] muted mt-2">💡 En realidad pandas <em>usa</em> numpy por dentro. Es como el motor del auto.</p>
+    </div>
+  </div>
+</div>
+
+<div class="panel p-5 mb-6">
+  <div class="flex items-start gap-4">
+    <div class="ico-serial flex-shrink-0">🔌</div>
+    <div class="flex-1">
+      <div class="flex items-baseline gap-2 mb-1">
+        <span class="font-semibold mono accent text-lg">pyserial</span>
+        <span class="text-xs muted">"pai-sí-rial"</span>
+        <span class="chip ml-2" style="background:#003c1a;color:#5fffaa;">✓ ya viene en Mu</span>
+      </div>
+      <div class="text-sm mb-3"><strong>¿Para qué sirve?</strong> Para <em>leer el cable USB</em> donde se enchufa el Arduino.</div>
+      <div class="panel-2 p-3 mb-3">
+        <div class="text-[11px] muted mb-1">🍕 Analogía</div>
+        <div class="text-sm">Es un <strong>traductor</strong>. Cuando el Arduino manda "650" por el cable USB, pyserial lo agarra y te lo pasa como texto a Python.</div>
+      </div>
+      <p class="text-[11px] muted">Esta librería <strong>solo la vas a usar cuando llegue el Arduino físico</strong>. Por ahora, ignoradla.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Instalación -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">INSTALAR DESDE LA TERMINAL DE MU</div>
+  <p class="text-sm muted mb-3">Abrí la Terminal en Mu (botón <span class="kbd">⚙</span> Admin → Terminal) y pegá:</p>
+  ${cm('pip','pip install pandas matplotlib numpy','text')}
+  <div class="text-xs muted mt-2">✓ <span class="accent">pyserial</span> ya viene preinstalado en Mu</div>
+</div>
+
+<!-- Verificación -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">VERIFICAR QUE ESTÁ TODO</div>
+  ${cm('verify',`import pandas as pd
+import matplotlib
+import numpy as np
+import serial
+
+print("pandas:    ", pd.__version__)
+print("matplotlib:", matplotlib.__version__)
+print("numpy:     ", np.__version__)
+print("pyserial:  ", serial.__version__)
+print("✓ Todo listo")`)}
+  <div class="text-xs mono muted mb-2 mt-3">SALIDA ESPERADA</div>
+  <div class="terminal">pandas:     2.2.0
+matplotlib: 3.8.2
+numpy:      1.26.3
+pyserial:   3.5
+<span class="w">✓ Todo listo</span></div>
+</div>
+
+<!-- Troubleshooting -->
+<div class="text-xs mono muted mb-3">SI ALGO FALLA AL INSTALAR</div>
+${[
+  {q:'pip is not recognized', a:'Estás en cmd común. Abrí la terminal <strong>desde Mu</strong> (botón Admin → Open Terminal).'},
+  {q:'Could not find a version that satisfies the requirement', a:'Revisá tu conexión a internet o probá <span class="mono accent">pip install --user pandas</span>.'},
+  {q:'ImportError: No module named pandas', a:'Pip lo instaló en otro Python. En Mu usá <span class="mono accent">python -m pip install pandas</span>.'},
+  {q:'serial.tools.list_ports no aparece', a:'Estás importando otra librería llamada <span class="mono">serial</span>. Desinstalá con <span class="mono">pip uninstall serial</span> y reinstalá <span class="mono accent">pyserial</span>.'},
+].map(t=>`
+<details class="panel mb-2">
+  <summary class="p-3 flex items-center gap-3 text-sm">
+    <span class="accordion-arrow muted">›</span>
+    <span class="text-[var(--red)]">⚠</span>
+    <span class="mono text-[12px]">${t.q}</span>
+  </summary>
+  <div class="px-5 pb-4 text-sm muted">${t.a}</div>
+</details>`).join('')}
+`;
+
+/* ---------- MOD 2.3 ---------- */
+MOD_BODY['m2.3'] = (m) => `
+${moduleHeader(m)}
+
+<div class="panel p-5 mb-6" style="background:#0e1a14;">
+  <div class="text-sm">👋 <strong>Hola.</strong> Asumimos que ya sabés Python <strong>hasta listas y funciones</strong>. Estos 5 conceptos nuevos son <em>todo</em> lo que necesitás extra para trabajar con datos de Arduino. Vamos despacio.</div>
+</div>
+
+<!-- C1 diccionarios -->
+<div class="panel p-5 mb-4">
+  <div class="flex items-center gap-2 mb-3"><span class="chip mono">Concepto 1</span><span class="font-semibold">Diccionarios — el primo de las listas</span></div>
+
+  <p class="text-sm mb-3">Una <strong>lista</strong> guarda valores en orden, y los buscás por su <em>posición</em>:</p>
+  <pre class="mono text-xs panel-2 p-3 mb-3">datos = [650, 23.5, 0]
+datos[0]   <span class="muted"># 650 — pero ¿qué era 650? ¿humedad? ¿temperatura?</span></pre>
+
+  <p class="text-sm mb-3">El problema: tenés que <em>acordarte</em> que la posición 0 era humedad. Si confundís el orden, se rompe todo.</p>
+
+  <p class="text-sm mb-3">Un <strong>diccionario</strong> guarda valores con un <em>nombre</em> (la "llave"), y los buscás por nombre:</p>
+
+  ${cm('c1',`# Diccionario: clave → valor
+dato = {"humedad": 650, "temperatura": 23.5, "bomba": 0}
+
+# Lo leés por nombre, no por posición
+print(dato["humedad"])      # 650
+print(dato["temperatura"])  # 23.5
+
+# Podés agregar claves nuevas
+dato["sensor_id"] = "A1"
+print(dato)`)}
+
+  <button class="btn btn-accent text-xs mt-2" onclick="document.getElementById('out-c1').classList.remove('hidden')">▶ Simular salida</button>
+  <div id="out-c1" class="terminal mt-3 hidden">650
+23.5
+{'humedad': 650, 'temperatura': 23.5, 'bomba': 0, 'sensor_id': 'A1'}</div>
+
+  <div class="panel-2 p-3 mt-3 text-xs">
+    <div class="accent mb-1">🍕 Analogía</div>
+    Una lista es una <strong>fila de cajones numerados</strong> (cajón 0, cajón 1...). Un diccionario es un <strong>casillero con etiquetas</strong> (casillero "humedad", casillero "temperatura"). Mucho más difícil equivocarse.
+  </div>
+</div>
+
+<!-- C2 imports -->
+<div class="panel p-5 mb-4">
+  <div class="flex items-center gap-2 mb-3"><span class="chip mono">Concepto 2</span><span class="font-semibold">Importar librerías — traer la caja de herramientas</span></div>
+
+  <p class="text-sm mb-3">Para usar una librería primero tenés que <strong>importarla</strong>. Es como agarrar la caja del estante antes de empezar a cocinar.</p>
+
+  ${cm('c2',`import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np`)}
+
+  <div class="panel-2 p-3 mt-3 text-xs">
+    <div class="accent mb-1">¿Qué significa <span class="mono">as pd</span>?</div>
+    Es un <strong>apodo</strong>. Como cuando llamás a tu amigo "Tincho" en vez de "Martín".<br>
+    Sin apodo: <span class="mono">pandas.read_csv("d.csv")</span><br>
+    Con apodo: <span class="mono accent">pd.read_csv("d.csv")</span> ← más corto, lo mismo.
+  </div>
+  <p class="text-[11px] muted mt-2">Los apodos <span class="mono">pd</span>, <span class="mono">plt</span>, <span class="mono">np</span> son <strong>convención mundial</strong>. Todo el mundo en Python los usa así — vos también.</p>
+</div>
+
+<!-- C3 DataFrames -->
+<div class="panel p-5 mb-4">
+  <div class="flex items-center gap-2 mb-3"><span class="chip mono">Concepto 3</span><span class="font-semibold">DataFrames — la tabla de pandas</span></div>
+
+  <p class="text-sm mb-3">Cuando pandas lee un CSV, te devuelve algo llamado <strong>DataFrame</strong>. No es una lista, no es un diccionario — es una <em>tabla</em> con filas y columnas:</p>
+
+  <div class="grid grid-cols-2 gap-4 mb-3">
+    <div>
+      <div class="text-xs muted mb-1">📄 Archivo datos_demo.csv</div>
+      <pre class="mono text-[11px] panel-2 p-2">timestamp,humedad,temperatura
+08:00:00,720,22.3
+08:00:05,715,22.4
+08:00:10,710,22.5</pre>
+    </div>
+    <div>
+      <div class="text-xs accent mb-1">📊 DataFrame (df) en Python</div>
+      <table class="df"><thead><tr><th>timestamp</th><th>humedad</th><th>temperatura</th></tr></thead>
+      <tbody>
+        <tr><td>08:00:00</td><td>720</td><td>22.3</td></tr>
+        <tr><td>08:00:05</td><td>715</td><td>22.4</td></tr>
+        <tr><td>08:00:10</td><td>710</td><td>22.5</td></tr>
+      </tbody></table>
+    </div>
+  </div>
+
+  <p class="text-sm mb-3">Para crear un DataFrame a partir de un CSV usás 3 líneas:</p>
+
+  ${cm('c3',`import pandas as pd
+
+# pd.read_csv lee el archivo y lo convierte en DataFrame
+df = pd.read_csv("datos_demo.csv")
+
+print(df.head())   # mostrar las primeras 5 filas
+print(df.shape)    # (cantidad_filas, cantidad_columnas)`)}
+
+  <div class="panel-2 p-3 mt-3 text-xs">
+    <div class="accent mb-1">🍕 Analogía</div>
+    Si Python "a secas" tiene <strong>listas</strong> (una fila de cosas), pandas tiene <strong>DataFrames</strong> (una hoja de Excel entera). En vez de un solo eje, tenés filas <em>y</em> columnas.
+  </div>
+
+  <button class="btn btn-accent text-xs mt-3" onclick="document.getElementById('out-c3').classList.remove('hidden')">▶ Simular salida</button>
+  <div id="out-c3" class="terminal mt-3 hidden">  timestamp  humedad  temperatura
+0  08:00:00      720         22.3
+1  08:00:05      715         22.4
+2  08:00:10      710         22.5
+3  08:00:15      702         22.6
+4  08:00:20      695         22.6
+<span class="w">(40, 3)</span></div>
+  <p class="text-[11px] muted mt-2">Esa primera columna de números (0, 1, 2...) es el <em>índice</em> — lo agrega pandas automáticamente para que cada fila tenga un número.</p>
+</div>
+
+<!-- C4 acceder columnas -->
+<div class="panel p-5 mb-4">
+  <div class="flex items-center gap-2 mb-3"><span class="chip mono">Concepto 4</span><span class="font-semibold">Acceder a columnas — pedir solo lo que necesitás</span></div>
+
+  <p class="text-sm mb-3">Una vez que tenés un DataFrame, podés pedir <strong>solo una columna</strong>, como si fuera un diccionario gigante:</p>
+
+  ${cm('c4',`# Toda la columna humedad (como una lista vertical)
+df["humedad"]
+
+# Un valor específico — fila 0, columna humedad
+df["humedad"][0]            # 720
+
+# Operaciones matemáticas sobre toda la columna
+df["humedad"].mean()        # promedio
+df["humedad"].max()         # el más grande
+df["humedad"].min()         # el más chico
+df["humedad"].sum()         # suma de todos
+df["humedad"].count()       # cuántos hay`)}
+
+  <div class="panel-2 p-3 mt-3 text-xs">
+    <div class="accent mb-1">🚀 Lo mágico</div>
+    <strong><span class="mono">.mean()</span> sobre una columna calcula el promedio de TODAS las filas de una sola vez.</strong> Sin <span class="mono">for</span>, sin contadores, sin nada. Eso te ahorra escribir 8 líneas.
+  </div>
+</div>
+
+<!-- C5 filtrar -->
+<div class="panel p-5 mb-4">
+  <div class="flex items-center gap-2 mb-3"><span class="chip mono">Concepto 5</span><span class="font-semibold">Filtrar filas — el <span class="mono">if</span> aplicado a tablas</span></div>
+
+  <p class="text-sm mb-3">Acordate cómo filtrarías una lista con un <span class="mono">for</span> e <span class="mono">if</span>:</p>
+  <pre class="mono text-xs panel-2 p-3 mb-3"><span style="color:#ff7788"># Python "a secas" — 4 líneas</span>
+secos = []
+for valor in humedades:
+    if valor &gt; 600:
+        secos.append(valor)</pre>
+
+  <p class="text-sm mb-3">Con pandas se hace en <strong>una línea</strong>:</p>
+
+  ${cm('c5',`# Solo las filas donde la humedad es mayor a 600
+secos = df[df["humedad"] > 600]
+
+# Solo las filas donde la bomba estuvo activa
+con_bomba = df[df["bomba_activa"] == 1]
+
+# Dos condiciones combinadas con & (y) o | (o)
+secos_y_calidos = df[(df["humedad"] > 600) & (df["temperatura"] > 25)]`)}
+
+  <div class="grid grid-cols-2 gap-3 mt-3">
+    <div>
+      <div class="text-xs muted mb-2">Tabla original (5 filas)</div>
+      <table class="df"><thead><tr><th>hum</th><th>temp</th></tr></thead>
+      <tbody>
+        <tr><td>720</td><td>22.3</td></tr>
+        <tr><td>650</td><td>22.8</td></tr>
+        <tr><td>489</td><td>23.5</td></tr>
+        <tr><td>705</td><td>22.4</td></tr>
+        <tr><td>312</td><td>24.1</td></tr>
+      </tbody></table>
+    </div>
+    <div>
+      <div class="text-xs accent mb-2">df[df["hum"] &gt; 600] — solo cumple 3</div>
+      <table class="df"><thead><tr><th>hum</th><th>temp</th></tr></thead>
+      <tbody>
+        <tr class="row-bad"><td>720</td><td>22.3</td></tr>
+        <tr class="row-bad"><td>650</td><td>22.8</td></tr>
+        <tr class="row-fade"><td>489</td><td>23.5</td></tr>
+        <tr class="row-bad"><td>705</td><td>22.4</td></tr>
+        <tr class="row-fade"><td>312</td><td>24.1</td></tr>
+      </tbody></table>
+      <div class="text-[11px] muted mt-2">Las grises se descartan, las verdes quedan en la tabla filtrada.</div>
+    </div>
+  </div>
+</div>
+
+<div class="panel p-4" style="background:#0a1f15;border-color:#00553a;">
+  <div class="text-sm">🎯 <strong>¿Listo?</strong> Con estos 5 conceptos (<span class="accent mono">diccionario, import, DataFrame, acceder columna, filtrar</span>) ya podés entender los 5 scripts del Bloque 3. No tenés que memorizarlos — siempre podés volver acá.</div>
+</div>
+`;
+
+/* ---------- MOD 2.4 quiz ---------- */
+const QUIZ_24 = [
+  { q:'¿Qué hace <span class="mono accent">df.head()</span>?', opts:[
+    'Devuelve las primeras 5 filas del DataFrame',
+    'Devuelve solo los encabezados',
+    'Elimina la primera fila',
+    'Cuenta cuántas filas hay'], correct:0,
+    exp:'<span class="mono">.head()</span> devuelve las primeras 5 filas (podés pasarle <span class="mono">.head(10)</span>).'},
+  { q:'Tenemos: <pre class="mono text-xs accent">df = pd.read_csv("datos.csv")</pre> ¿Cómo obtenés el promedio de la columna humedad?', opts:[
+    'df.mean("humedad")',
+    'df["humedad"].mean()',
+    'mean(df.humedad)',
+    'df.average("humedad")'], correct:1,
+    exp:'En pandas se accede a la columna con <span class="mono">df["columna"]</span> y se le aplica <span class="mono">.mean()</span>.'},
+  { q:'¿Qué es <span class="mono accent">pd</span> en <span class="mono">import pandas as pd</span>?', opts:[
+    'Un módulo separado llamado pd',
+    'Un apodo (alias) para pandas en este script',
+    'El path donde se guarda la librería',
+    'Un parámetro obligatorio'], correct:1,
+    exp:'Es un alias: a partir de ese import, <span class="mono">pd</span> se refiere a pandas en este archivo.'},
+  { q:'¿Cuál es el formato de datos que usamos en este curso?', opts:[
+    'JSON',
+    'XML',
+    'CSV inline (valores separados por coma)',
+    'Excel binario'], correct:2,
+    exp:'CSV inline es lo más simple para Arduino → Python y se lee en una línea con pandas.'},
+  { q:'Querés solo las filas donde la bomba estuvo activa. ¿Cuál es correcto?', opts:[
+    'df.filter("bomba_activa == 1")',
+    'df[df["bomba_activa"] == 1]',
+    'df.where(bomba_activa = 1)',
+    'df.bomba_activa.true()'], correct:1,
+    exp:'Filtrado booleano: <span class="mono">df[df["columna"] == valor]</span>.'},
+];
+
+MOD_BODY['m2.4'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">5 preguntas rápidas. Retroalimentación inmediata. Tu puntaje se guarda.</p>
+
+<div id="quiz-24">
+  ${QUIZ_24.map((qq,i)=>`
+    <div class="panel p-5 mb-4" data-qidx="${i}">
+      <div class="flex items-center gap-2 mb-3"><span class="chip mono">Pregunta ${i+1}</span></div>
+      <div class="mb-3 text-sm">${qq.q}</div>
+      <div class="space-y-2">
+        ${qq.opts.map((o,j)=>`
+          <div class="quiz-opt" data-opt="${j}" onclick="answerQuiz('q24',${i},${j})">
+            <span class="mono muted">${'abcd'[j]})</span>
+            <span>${o}</span>
+          </div>`).join('')}
+      </div>
+      <div class="explain mt-3 text-xs muted hidden">${qq.exp}</div>
+    </div>
+  `).join('')}
+</div>
+
+<div class="panel p-5 flex items-center justify-between" style="background:#0a1f15;border-color:#00553a;">
+  <div>
+    <div class="text-xs muted">Puntaje</div>
+    <div class="mono text-3xl accent" id="score-24">0 / 5</div>
+  </div>
+  <button class="btn" onclick="reviewQuiz('q24')">Revisar incorrectas</button>
+</div>
+`;
+
+function answerQuiz(quizId, qi, oj){
+  STATE.quiz[quizId] = STATE.quiz[quizId] || {};
+  if(STATE.quiz[quizId][qi] !== undefined) return;
+  const correct = quizId==='q24' ? QUIZ_24[qi].correct : QUIZ_FINAL[qi].correct;
+  STATE.quiz[quizId][qi] = oj;
+  saveState();
+  const panel = document.querySelector(`[data-qidx="${qi}"]`);
+  panel.querySelectorAll('.quiz-opt').forEach((el,idx)=>{
+    el.classList.add('disabled');
+    if(idx===correct) el.classList.add('correct');
+    if(idx===oj && idx!==correct) el.classList.add('wrong');
+  });
+  panel.querySelector('.explain').classList.remove('hidden');
+  // update score
+  const score = Object.entries(STATE.quiz[quizId]).filter(([k,v])=>{
+    const c = quizId==='q24' ? QUIZ_24[k].correct : QUIZ_FINAL[k].correct;
+    return v===c;
+  }).length;
+  const elScore = document.getElementById(quizId==='q24'?'score-24':'score-final');
+  if(elScore) elScore.textContent = score + ' / ' + (quizId==='q24'?QUIZ_24.length:QUIZ_FINAL.length);
+}
+function reviewQuiz(quizId){
+  STATE.quiz[quizId]={};
+  saveState();
+  renderModule(STATE.current);
+}
+
+/* ---------- MOD 3.1 ---------- */
+MOD_BODY['m3.1'] = (m) => `
+${moduleHeader(m)}
+<h2 class="text-lg muted mb-6">"Conocé tus datos antes de graficar"</h2>
+
+<p class="text-sm muted mb-4">Este script hace <strong>EDA básico</strong> (Exploratory Data Analysis): cuántas filas hay, qué tipos, estadísticas, valores nulos. <em>Antes</em> de graficar, hay que conocer los datos.</p>
+
+${cm('s31',`import pandas as pd
+
+# Cargar datos
+df = pd.read_csv("datos_demo.csv")
+
+# Explorar la estructura
+print("=== PRIMERAS FILAS ===")
+print(df.head())
+
+print("\\n=== INFORMACIÓN GENERAL ===")
+print(df.info())
+
+print("\\n=== ESTADÍSTICAS ===")
+print(df.describe())
+
+print("\\n=== VALORES NULOS ===")
+print(df.isnull().sum())
+
+print("\\n=== CUÁNTAS VECES ACTIVÓ LA BOMBA ===")
+print(df["bomba_activa"].value_counts())`)}
+
+<div class="text-xs mono muted mb-2 mt-6">SALIDA ESPERADA</div>
+<div class="terminal">=== PRIMERAS FILAS ===
+             timestamp  humedad  temperatura  bomba_activa
+0  2024-01-15 08:00:00      720         22.3             0
+1  2024-01-15 08:00:05      715         22.4             0
+2  2024-01-15 08:00:10      710         22.5             0
+3  2024-01-15 08:00:15      702         22.6             0
+4  2024-01-15 08:00:20      695         22.6             0
+
+=== INFORMACIÓN GENERAL ===
+&lt;class 'pandas.core.frame.DataFrame'&gt;
+RangeIndex: 40 entries, 0 to 39
+Data columns (total 4 columns):
+ #   Column         Non-Null Count  Dtype
+---  ------         --------------  -----
+ 0   timestamp      40 non-null     object
+ 1   humedad        40 non-null     int64
+ 2   temperatura    40 non-null     float64
+ 3   bomba_activa   40 non-null     int64
+
+=== ESTADÍSTICAS ===
+          humedad  temperatura  bomba_activa
+count   40.000000    40.000000     40.000000
+mean   587.450000    23.187500      0.225000
+std    132.456789     0.612345      0.422890
+min    312.000000    22.300000      0.000000
+25%    489.500000    22.700000      0.000000
+50%    612.000000    23.100000      0.000000
+75%    700.250000    23.700000      0.000000
+max    720.000000    24.100000      1.000000
+
+=== VALORES NULOS ===
+timestamp       0
+humedad         0
+temperatura     0
+bomba_activa    0
+
+=== CUÁNTAS VECES ACTIVÓ LA BOMBA ===
+bomba_activa
+0    31
+1     9
+Name: count, dtype: int64</div>
+
+<div class="panel p-4 mt-6 grid grid-cols-3 gap-3 text-xs">
+  <div><div class="muted">Filas</div><div class="mono text-2xl accent">40</div></div>
+  <div><div class="muted">Humedad promedio</div><div class="mono text-2xl accent">587</div></div>
+  <div><div class="muted">Activaciones bomba</div><div class="mono text-2xl accent">9</div></div>
+</div>
+`;
+
+/* ---------- MOD 3.2 ---------- */
+MOD_BODY['m3.2'] = (m) => `
+${moduleHeader(m)}
+<h2 class="text-lg muted mb-6">"Los datos reales no siempre llegan perfectos"</h2>
+
+<p class="text-sm muted mb-4">Cuando el Arduino se desconecta un instante, el sensor falla o hay ruido eléctrico, aparecen valores raros. Antes de graficar hay que <strong>limpiar</strong>.</p>
+
+<!-- CSV sucio -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+  <div>
+    <div class="text-xs muted mb-2">❌ CSV "sucio" (real)</div>
+    <table class="df">
+      <thead><tr><th>hum</th><th>temp</th><th>bomba</th></tr></thead>
+      <tbody>
+        <tr><td>720</td><td>22.3</td><td>0</td></tr>
+        <tr class="row-bad"><td>-1</td><td>22.4</td><td>0</td></tr>
+        <tr><td>710</td><td>22.5</td><td>0</td></tr>
+        <tr class="row-bad"><td>NaN</td><td>NaN</td><td>NaN</td></tr>
+        <tr><td>695</td><td>22.6</td><td>0</td></tr>
+        <tr class="row-bad"><td>9999</td><td>22.7</td><td>0</td></tr>
+        <tr><td>710</td><td>22.5</td><td>0</td></tr>
+        <tr><td>489</td><td>23.5</td><td>1</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div>
+    <div class="text-xs accent mb-2">✓ Después de limpiar</div>
+    <table class="df">
+      <thead><tr><th>hum</th><th>temp</th><th>bomba</th></tr></thead>
+      <tbody>
+        <tr><td>720</td><td>22.3</td><td>0</td></tr>
+        <tr><td>710</td><td>22.5</td><td>0</td></tr>
+        <tr><td>695</td><td>22.6</td><td>0</td></tr>
+        <tr><td>489</td><td>23.5</td><td>1</td></tr>
+      </tbody>
+    </table>
+    <div class="text-[11px] muted mt-2">Eliminadas: 4 filas (NaN, -1, 9999, duplicado)</div>
+  </div>
+</div>
+
+${cm('s32',`import pandas as pd
+
+df = pd.read_csv("datos_demo.csv")
+
+# Ver cuántos valores nulos hay
+print(df.isnull().sum())
+
+# Eliminar filas con valores nulos
+df = df.dropna()
+
+# Filtrar valores imposibles del sensor (0-1023 es el rango válido)
+df = df[df["humedad"].between(0, 1023)]
+df = df[df["temperatura"].between(-10, 60)]
+
+# Eliminar duplicados
+df = df.drop_duplicates()
+
+# Resetear el índice después de limpiar
+df = df.reset_index(drop=True)
+
+print(f"Filas después de limpiar: {len(df)}")
+
+# Guardar datos limpios
+df.to_csv("datos_limpios.csv", index=False)
+print("Guardado como datos_limpios.csv")`)}
+
+<div class="text-xs mono muted mb-2 mt-6">SALIDA ESPERADA</div>
+<div class="terminal">timestamp       0
+humedad         3
+temperatura     2
+bomba_activa    1
+
+Filas después de limpiar: 36
+<span class="w">Guardado como datos_limpios.csv</span></div>
+`;
+
+/* ---------- MOD 3.3 ---------- */
+MOD_BODY['m3.3'] = (m) => `
+${moduleHeader(m)}
+<h2 class="text-lg muted mb-6">"Convertí números en imágenes que se entienden"</h2>
+
+<!-- Gráfico 1 -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div><span class="chip mono">Gráfico 1</span> <span class="font-semibold ml-2">Línea: humedad en el tiempo</span></div>
+  </div>
+  
+  <!-- SVG preview -->
+  <svg viewBox="0 0 600 200" class="w-full mb-4" style="background:#fff;border-radius:6px;">
+    <line x1="50" y1="20" x2="50" y2="170" stroke="#333"/>
+    <line x1="50" y1="170" x2="580" y2="170" stroke="#333"/>
+    <text x="40" y="30" fill="#333" font-size="10" text-anchor="end" font-family="monospace">1023</text>
+    <text x="40" y="100" fill="#333" font-size="10" text-anchor="end" font-family="monospace">500</text>
+    <text x="40" y="170" fill="#333" font-size="10" text-anchor="end" font-family="monospace">0</text>
+    <!-- Umbral línea roja -->
+    <line x1="50" y1="100" x2="580" y2="100" stroke="#ff3344" stroke-dasharray="4 4"/>
+    <text x="575" y="95" fill="#ff3344" font-size="10" text-anchor="end" font-family="monospace">Umbral 500</text>
+    <!-- línea humedad -->
+    <polyline fill="none" stroke="#1864ab" stroke-width="2"
+      points="60,65 90,68 120,72 150,78 180,88 210,98 240,113 270,128 300,140 330,128 360,108 390,82 420,68 450,60 480,62 510,65 540,70"/>
+    <text x="300" y="190" fill="#333" font-size="11" text-anchor="middle" font-family="sans-serif">Humedad del suelo en el tiempo</text>
+  </svg>
+
+  ${cm('g31',`import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("datos_limpios.csv")
+
+plt.figure(figsize=(10, 4))
+plt.plot(df["timestamp"], df["humedad"], color="blue", linewidth=2)
+plt.axhline(y=500, color="red", linestyle="--", label="Umbral de riego")
+plt.title("Humedad del suelo en el tiempo")
+plt.xlabel("Tiempo")
+plt.ylabel("Humedad (0-1023)")
+plt.legend()
+plt.tight_layout()
+plt.savefig("graficos/humedad.png")
+plt.show()`)}
+
+  <div class="grid grid-cols-3 gap-2 text-[11px] mt-3">
+    <div class="panel-2 p-2"><span class="mono accent">figsize=(10,4)</span><div class="muted mt-1">Tamaño en pulgadas</div></div>
+    <div class="panel-2 p-2"><span class="mono accent">linewidth=2</span><div class="muted mt-1">Grosor de línea</div></div>
+    <div class="panel-2 p-2"><span class="mono accent">linestyle="--"</span><div class="muted mt-1">Línea punteada</div></div>
+  </div>
+  <div class="panel-2 p-3 mt-3 text-xs"><span class="accent">🎯 Ejercicio:</span> cambiá el color de la línea a <span class="mono accent">"green"</span> y el título a "Mi primer gráfico".</div>
+</div>
+
+<!-- Gráfico 2 -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div><span class="chip mono">Gráfico 2</span> <span class="font-semibold ml-2">Barras: activaciones de bomba por hora</span></div>
+  </div>
+
+  <svg viewBox="0 0 600 200" class="w-full mb-4" style="background:#fff;border-radius:6px;">
+    <line x1="50" y1="20" x2="50" y2="170" stroke="#333"/>
+    <line x1="50" y1="170" x2="580" y2="170" stroke="#333"/>
+    ${[8,9,10,11,12,13,14,15,16,17,18,19].map((h,i)=>{
+      const vals=[1,2,3,4,5,4,3,2,5,3,1,0]; const v=vals[i];
+      return `<rect x="${65+i*42}" y="${170-v*25}" width="30" height="${v*25}" fill="#1864ab"/>
+              <text x="${80+i*42}" y="182" fill="#333" font-size="9" text-anchor="middle" font-family="monospace">${h}h</text>`;
+    }).join('')}
+    <text x="300" y="195" fill="#333" font-size="11" text-anchor="middle">Activaciones por hora</text>
+  </svg>
+
+  ${cm('g32',`import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("datos_limpios.csv")
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+df["hora"] = df["timestamp"].dt.hour
+
+# Contar activaciones por hora
+activaciones = df[df["bomba_activa"]==1].groupby("hora").size()
+
+plt.figure(figsize=(10,4))
+plt.bar(activaciones.index, activaciones.values, color="#1864ab")
+plt.title("Activaciones de bomba por hora del día")
+plt.xlabel("Hora")
+plt.ylabel("Cantidad")
+plt.savefig("graficos/bomba_por_hora.png")
+plt.show()`)}
+</div>
+
+<!-- Gráfico 3 -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div><span class="chip mono">Gráfico 3</span> <span class="font-semibold ml-2">Dispersión: humedad vs temperatura</span></div>
+  </div>
+
+  <svg viewBox="0 0 600 240" class="w-full mb-4" style="background:#fff;border-radius:6px;">
+    <line x1="50" y1="20" x2="50" y2="210" stroke="#333"/>
+    <line x1="50" y1="210" x2="580" y2="210" stroke="#333"/>
+    <text x="20" y="115" fill="#333" font-size="10" font-family="monospace" transform="rotate(-90 20 115)">humedad</text>
+    <text x="300" y="232" fill="#333" font-size="10" text-anchor="middle" font-family="monospace">temperatura</text>
+    ${Array.from({length:40},(_,i)=>{
+      const t = 22 + Math.random()*2.5;
+      const h = 700 - (t-22)*120 + (Math.random()-0.5)*200;
+      const bomba = h < 500 ? 1:0;
+      const x = 50 + ((t-22)/2.5)*520;
+      const y = 210 - (h/1023)*180;
+      return `<circle cx="${x}" cy="${y}" r="4" fill="${bomba?'#1864ab':'#888'}" opacity=".7"/>`;
+    }).join('')}
+    <circle cx="500" cy="40" r="4" fill="#1864ab"/><text x="510" y="44" fill="#333" font-size="10">bomba ON</text>
+    <circle cx="500" cy="60" r="4" fill="#888"/><text x="510" y="64" fill="#333" font-size="10">bomba OFF</text>
+  </svg>
+
+  ${cm('g33',`import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv("datos_limpios.csv")
+
+plt.figure(figsize=(8,5))
+colores = df["bomba_activa"].map({0:"gray", 1:"blue"})
+plt.scatter(df["temperatura"], df["humedad"], c=colores, alpha=0.7)
+plt.title("Humedad vs Temperatura")
+plt.xlabel("Temperatura (°C)")
+plt.ylabel("Humedad (0-1023)")
+plt.savefig("graficos/scatter.png")
+plt.show()`)}
+</div>
+`;
+
+/* ---------- MOD 3.4 ---------- */
+MOD_BODY['m3.4'] = (m) => `
+${moduleHeader(m)}
+<h2 class="text-lg muted mb-6">"Cuando el team de hardware esté listo — solo cambiás estas líneas"</h2>
+
+<div class="panel p-4 mb-6" style="background:#0e1a14;">
+  <div class="text-sm">📌 Este módulo es para cuando llegue el Arduino. Por ahora seguí practicando con <span class="mono accent">datos_demo.csv</span>.</div>
+</div>
+
+<!-- Comparativa lado a lado -->
+<div class="text-xs mono muted mb-3">DEMO vs REAL — la única diferencia</div>
+<div class="grid grid-cols-2 gap-4 mb-6">
+  <div>
+    <div class="text-xs muted mb-2">🎮 Modo demo (ahora)</div>
+    ${cm('d-demo',`import pandas as pd
+
+df = pd.read_csv("datos_demo.csv")
+for fila in df.itertuples():
+    print(fila.humedad)`)}
+  </div>
+  <div>
+    <div class="text-xs accent mb-2">🔌 Modo real (cuando llegue el Arduino)</div>
+    ${cm('d-real',`import serial
+
+arduino = serial.Serial("COM3", 9600)
+while True:
+    linea = arduino.readline()
+    print(linea.decode().strip())`)}
+  </div>
+</div>
+
+<!-- Encontrar puerto -->
+<div class="panel p-5 mb-6">
+  <div class="font-semibold mb-2">¿Cómo encontrar el puerto COM?</div>
+  <ol class="text-sm muted space-y-2 ml-4">
+    <li><span class="accent mono">1.</span> Apretá <span class="kbd">Win</span>+<span class="kbd">X</span> → Administrador de dispositivos</li>
+    <li><span class="accent mono">2.</span> Buscá la sección "Puertos (COM y LPT)"</li>
+    <li><span class="accent mono">3.</span> Tu Arduino aparece como <span class="mono accent">USB-SERIAL CH340 (COM3)</span> o <span class="mono accent">Arduino Uno (COM4)</span></li>
+  </ol>
+  <svg viewBox="0 0 500 140" class="w-full mt-3" style="background:#1e1e1e;border-radius:6px;">
+    <text x="14" y="24" fill="#e6e6e6" font-size="13" font-family="sans-serif">📁 Administrador de dispositivos</text>
+    <text x="20" y="48" fill="#aaa" font-size="11" font-family="sans-serif">▸ Adaptadores de red</text>
+    <text x="20" y="68" fill="#aaa" font-size="11" font-family="sans-serif">▾ Puertos (COM y LPT)</text>
+    <text x="40" y="88" fill="#00ff88" font-size="11" font-family="monospace">USB-SERIAL CH340 (COM3)</text>
+    <text x="20" y="108" fill="#aaa" font-size="11" font-family="sans-serif">▸ Procesadores</text>
+    <rect x="36" y="78" width="200" height="14" fill="#00ff88" opacity="0.12"/>
+  </svg>
+</div>
+
+<!-- Script 1 real -->
+<div class="panel p-5 mb-6">
+  <div class="font-semibold mb-2">Script A — Leer Arduino en consola</div>
+  ${cm('s34a',`import serial
+
+# Cambiá COM3 por tu puerto
+arduino = serial.Serial("COM3", 9600, timeout=1)
+
+print("Leyendo Arduino... (Ctrl+C para parar)")
+while True:
+    linea = arduino.readline().decode("utf-8").strip()
+    if linea:
+        print(linea)`)}
+</div>
+
+<!-- Script 2 real -->
+<div class="panel p-5 mb-6">
+  <div class="font-semibold mb-2">Script B — Leer Arduino y guardar en CSV</div>
+  ${cm('s34b',`import serial
+from datetime import datetime
+import csv
+
+arduino = serial.Serial("COM3", 9600, timeout=1)
+
+with open("datos_real.csv","w",newline="") as f:
+    w = csv.writer(f)
+    w.writerow(["timestamp","humedad","temperatura","bomba"])
+
+    print("Grabando... Ctrl+C para parar")
+    while True:
+        linea = arduino.readline().decode("utf-8").strip()
+        if not linea: continue
+        # esperamos "650,23.5,0"
+        partes = linea.split(",")
+        if len(partes) == 3:
+            ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            w.writerow([ts] + partes)
+            f.flush()
+            print(ts, partes)`)}
+</div>
+`;
+
+/* ---------- MOD 3.5 ---------- */
+MOD_BODY['m3.5'] = (m) => `
+${moduleHeader(m)}
+<h2 class="text-lg muted mb-6">"Gráfico que se actualiza solo — como un monitor"</h2>
+
+<p class="text-sm muted mb-4">Con <span class="mono accent">matplotlib.animation</span> el gráfico "respira" en tiempo real: se redibuja cada N milisegundos.</p>
+
+<!-- Simulador -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="font-semibold">Simulador en este HTML</div>
+    <div class="flex gap-2">
+      <button class="btn btn-accent text-xs" onclick="startSim()">▶ Iniciar</button>
+      <button class="btn text-xs" onclick="stopSim()">■ Parar</button>
+    </div>
+  </div>
+
+  <svg id="sim-svg" viewBox="0 0 600 220" class="w-full" style="background:#0a0a0a;border-radius:6px;border:1px solid var(--border);">
+    <line x1="50" y1="20" x2="50" y2="190" stroke="#333"/>
+    <line x1="50" y1="190" x2="580" y2="190" stroke="#333"/>
+    <text x="40" y="30" fill="#888" font-size="10" text-anchor="end" font-family="monospace">1023</text>
+    <text x="40" y="110" fill="#888" font-size="10" text-anchor="end" font-family="monospace">500</text>
+    <text x="40" y="190" fill="#888" font-size="10" text-anchor="end" font-family="monospace">0</text>
+    <line x1="50" y1="110" x2="580" y2="110" stroke="#ff3344" stroke-dasharray="4 4"/>
+    <polyline id="sim-line" fill="none" stroke="#00ff88" stroke-width="2" points=""/>
+    <text id="sim-frame" x="560" y="40" fill="#00ff88" font-size="11" font-family="monospace" text-anchor="end">Frame 0</text>
+    <text x="300" y="212" fill="#888" font-size="11" text-anchor="middle" font-family="monospace">Humedad en tiempo real (últimas 20 lecturas)</text>
+  </svg>
+</div>
+
+${cm('s35',`import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import pandas as pd
+
+fig, ax = plt.subplots(figsize=(10, 5))
+
+def actualizar(frame):
+    df = pd.read_csv("datos_demo.csv")
+    ax.clear()
+    ax.plot(df["humedad"][-20:], color="#00ff88")
+    ax.set_title(f"Humedad en tiempo real — Frame {frame}")
+    ax.set_ylim(0, 1023)
+    ax.axhline(500, color="red", linestyle="--")
+
+# Cada 1000ms (1 segundo) llama a "actualizar"
+ani = animation.FuncAnimation(fig, actualizar, interval=1000)
+plt.show()`)}
+
+<div class="panel p-4 mt-4" style="background:#0e1a14;">
+  <div class="text-sm">💡 <strong>Cuando conectés el Arduino:</strong> reemplazá <span class="mono accent">pd.read_csv(...)</span> por <span class="mono accent">arduino.readline()</span> dentro de <span class="mono">actualizar()</span>. El gráfico empieza a leer en vivo.</div>
+</div>
+`;
+MOD_AFTER['m3.5'] = () => {
+  let pts=[]; let frame=0;
+  const line=document.getElementById('sim-line');
+  const fr=document.getElementById('sim-frame');
+  window.startSim = ()=>{
+    if(window._simT) return;
+    let h=700;
+    window._simT = setInterval(()=>{
+      // bias toward 500 with bomb when low
+      const trend = h<500 ? 30 : (h>800 ? -20 : 0);
+      h = Math.max(200, Math.min(950, h + trend + (Math.random()-0.5)*60));
+      pts.push(h);
+      if(pts.length>20) pts.shift();
+      const poly = pts.map((v,i)=>`${50+(i)*((580-50)/19)},${190 - (v/1023)*170}`).join(' ');
+      if(line) line.setAttribute('points', poly);
+      frame++;
+      if(fr) fr.textContent = 'Frame ' + frame;
+    }, 500);
+  };
+  window.stopSim = ()=>{ clearInterval(window._simT); window._simT=null; };
+};
+
+/* ---------- MOD 3.6 final + proyecto ---------- */
+const QUIZ_FINAL = [
+  { q:'¿Qué hace <span class="mono accent">df.dropna()</span>?', opts:[
+    'Borra columnas vacías',
+    'Elimina filas que tengan algún NaN',
+    'Reemplaza NaN por 0',
+    'Verifica si hay NaN'], correct:1,
+    exp:'Elimina filas que contengan al menos un valor nulo.'},
+  { q:'Querés guardar un DataFrame como CSV sin la columna índice. ¿Cuál?', opts:[
+    'df.to_csv("d.csv")',
+    'df.save("d.csv", index=False)',
+    'df.to_csv("d.csv", index=False)',
+    'df.export_csv("d.csv")'], correct:2,
+    exp:'<span class="mono">index=False</span> evita escribir la columna 0,1,2... del índice.'},
+  { q:'¿Qué error tiene? <pre class="mono text-xs accent">arduino = serial.Serial("COM3" 9600)</pre>', opts:[
+    'COM3 está mal escrito',
+    'Falta una coma entre los argumentos',
+    'serial.Serial no existe',
+    '9600 debe ir entre comillas'], correct:1,
+    exp:'Faltan la coma: <span class="mono">serial.Serial("COM3", 9600)</span>.'},
+  { q:'¿Cómo cambiar el color de una línea a verde en matplotlib?', opts:[
+    'plt.plot(x, y, color="green")',
+    'plt.plot(x, y).color = "green"',
+    'plt.line(x, y, "green")',
+    'plt.draw(x, y, fill="green")'], correct:0,
+    exp:'<span class="mono">color="green"</span> es un parámetro de <span class="mono">plt.plot</span>.'},
+  { q:'En CSV inline <span class="mono">"650,23.5,0"</span>, ¿qué hace <span class="mono accent">.split(",")</span>?', opts:[
+    'Borra las comas',
+    'Devuelve la lista <span class="mono">["650","23.5","0"]</span>',
+    'Suma los valores',
+    'Convierte a float'], correct:1,
+    exp:'<span class="mono">split</span> separa el string por el delimitador y devuelve una lista de strings.'},
+  { q:'¿Qué tipo de gráfico usarías para "humedad a lo largo del día"?', opts:[
+    'plt.bar', 'plt.scatter', 'plt.plot (línea)', 'plt.pie'], correct:2,
+    exp:'Una línea es lo mejor para series de tiempo continuas.'},
+  { q:'<span class="mono">animation.FuncAnimation(fig, actualizar, interval=500)</span>: ¿cada cuánto se llama actualizar?', opts:[
+    '500 segundos','500 ms (medio segundo)','5 segundos','depende del CPU'], correct:1,
+    exp:'<span class="mono">interval</span> está en milisegundos. 500 = medio segundo.'},
+  { q:'¿Qué representa este gráfico?<br><svg viewBox="0 0 200 80" class="mt-2" style="background:#fff;border-radius:4px;"><polyline fill="none" stroke="#1864ab" stroke-width="2" points="10,30 30,32 50,36 70,42 90,55 110,68 130,55 150,38 170,32 190,30"/><line x1="10" y1="50" x2="190" y2="50" stroke="#ff3344" stroke-dasharray="3 3"/></svg>', opts:[
+    'Humedad subiendo todo el día',
+    'Humedad bajando, cruzando umbral de riego, y subiendo (bomba activada)',
+    'Temperatura constante',
+    'Error de sensor'], correct:1,
+    exp:'La línea baja, toca el umbral rojo (la bomba se activa) y vuelve a subir.'},
+];
+
+MOD_BODY['m3.6'] = (m) => `
+${moduleHeader(m)}
+
+<!-- Autoeval -->
+<div class="text-xs mono muted mb-3">AUTOEVALUACIÓN FINAL · 8 preguntas</div>
+
+<div id="quiz-final">
+  ${QUIZ_FINAL.map((qq,i)=>`
+    <div class="panel p-5 mb-4" data-qidx="${i}">
+      <div class="flex items-center gap-2 mb-3"><span class="chip mono">Pregunta ${i+1}</span></div>
+      <div class="mb-3 text-sm">${qq.q}</div>
+      <div class="space-y-2">
+        ${qq.opts.map((o,j)=>`
+          <div class="quiz-opt" data-opt="${j}" onclick="answerQuiz('qfinal',${i},${j})">
+            <span class="mono muted">${'abcd'[j]})</span>
+            <span>${o}</span>
+          </div>`).join('')}
+      </div>
+      <div class="explain mt-3 text-xs muted hidden">${qq.exp}</div>
+    </div>
+  `).join('')}
+</div>
+
+<div class="panel p-5 mb-10 flex items-center justify-between" style="background:#0a1f15;border-color:#00553a;">
+  <div>
+    <div class="text-xs muted">Puntaje final</div>
+    <div class="mono text-3xl accent" id="score-final">0 / 8</div>
+  </div>
+  <button class="btn" onclick="reviewQuiz('qfinal')">Reiniciar quiz</button>
+</div>
+
+<!-- PROYECTO INTEGRADOR -->
+<div class="panel p-6 mb-6" style="background:linear-gradient(135deg,#0a1f15,#0a0a0a);border-color:var(--accent);">
+  <div class="flex items-center gap-2 mb-3">
+    <span style="font-size:22px">🎯</span>
+    <h2 class="text-xl font-semibold accent">Proyecto Integrador</h2>
+  </div>
+  <p class="text-sm">Analizá los datos de riego de la semana pasada. Tu script Python debe:</p>
+  <div class="space-y-2 mt-4 text-sm">
+    ${[
+      'Cargar datos_demo.csv',
+      'Limpiar los datos (nulos, valores imposibles, duplicados)',
+      'Calcular: promedio de humedad, cantidad de activaciones de bomba, hora del día con más riegos',
+      'Generar 2 gráficos guardados como PNG en graficos/',
+      'Imprimir un reporte legible en consola',
+    ].map((c,i)=>`
+      <label class="flex items-start gap-3 cursor-pointer">
+        <input type="checkbox" class="mt-1 accent-[var(--accent)]" onchange="STATE.quiz['proj_'+${i}]=this.checked;saveState()" ${STATE.quiz['proj_'+i]?'checked':''}/>
+        <span>${c}</span>
+      </label>
+    `).join('')}
+  </div>
+</div>
+
+<details class="panel mb-6">
+  <summary class="p-5 font-semibold flex items-center gap-3">
+    <span class="accordion-arrow accent">›</span>
+    Ver solución modelo
+  </summary>
+  <div class="px-5 pb-5">
+${cm('sol',`import pandas as pd
+import matplotlib.pyplot as plt
+
+# 1. Cargar
+df = pd.read_csv("datos_demo.csv")
+
+# 2. Limpiar
+df = df.dropna()
+df = df[df["humedad"].between(0, 1023)]
+df = df[df["temperatura"].between(-10, 60)]
+df = df.drop_duplicates().reset_index(drop=True)
+
+# 3. Calcular
+df["timestamp"] = pd.to_datetime(df["timestamp"])
+df["hora"] = df["timestamp"].dt.hour
+
+promedio_hum = df["humedad"].mean()
+activaciones = df["bomba_activa"].sum()
+hora_pico = df[df["bomba_activa"]==1]["hora"].mode()[0]
+
+# 4. Gráficos
+plt.figure(figsize=(10,4))
+plt.plot(df["timestamp"], df["humedad"], color="blue")
+plt.axhline(500, color="red", linestyle="--")
+plt.title("Humedad del suelo")
+plt.tight_layout()
+plt.savefig("graficos/humedad.png")
+plt.close()
+
+plt.figure(figsize=(10,4))
+df[df["bomba_activa"]==1].groupby("hora").size().plot(kind="bar", color="#00aa55")
+plt.title("Activaciones por hora")
+plt.tight_layout()
+plt.savefig("graficos/bomba_por_hora.png")
+plt.close()
+
+# 5. Reporte
+print("=" * 40)
+print("  REPORTE DE RIEGO — SEMANA")
+print("=" * 40)
+print(f"Humedad promedio:       {promedio_hum:.1f}")
+print(f"Activaciones de bomba:  {activaciones}")
+print(f"Hora con más riegos:    {hora_pico}:00 hs")
+print(f"Gráficos guardados en:  graficos/")
+print("=" * 40)`)}
+  </div>
+</details>
+
+<div class="panel p-5 text-center" style="background:#0a1f15;">
+  <div style="font-size:30px">🎓</div>
+  <div class="text-lg font-semibold mt-2">¡Listo!</div>
+  <div class="text-sm muted mt-1">Ahora sabés manejar datos de Arduino con Python. Cuando llegue el hardware, ya tenés todo el flujo armado.</div>
+</div>
+`;
+
+/* ===========================================================
+   BLOQUE 4 · SCRUM DEL TEAM SOFTWARE
+   =========================================================== */
+
+const DEFAULT_STORIES = [
+  // SPRINT 1
+  { id:'s1-1', sprint:1, title:'Instalar Mu Editor y verificar que funciona', crit:'print("Hola") corre sin errores', col:'todo', who:'', blocked:false },
+  { id:'s1-2', sprint:1, title:'Generar el CSV demo con el generador del Módulo 2.1', crit:'datos_demo.csv con 50 filas guardado en la carpeta', col:'todo', who:'', blocked:false },
+  { id:'s1-3', sprint:1, title:'Correr el Script 1 (EDA básico) con datos demo', crit:'df.describe() y df.info() se muestran en consola', col:'todo', who:'', blocked:false },
+  { id:'s1-4', sprint:1, title:'Instalar pandas, matplotlib, numpy', crit:'import sin errores en Mu', col:'todo', who:'', blocked:false },
+  // SPRINT 2
+  { id:'s2-1', sprint:2, title:'Correr el Script 2 (limpieza de datos)', crit:'datos_limpios.csv generado sin NaN ni valores fuera de rango', col:'todo', who:'', blocked:false },
+  { id:'s2-2', sprint:2, title:'Generar el Gráfico 1 (línea de humedad en el tiempo)', crit:'PNG guardado en /graficos con umbral visible', col:'todo', who:'', blocked:false },
+  { id:'s2-3', sprint:2, title:'Generar el Gráfico 2 (barras de activaciones de bomba)', crit:'PNG guardado, eje X con horas legibles', col:'todo', who:'', blocked:false },
+  // SPRINT 3
+  { id:'s3-1', sprint:3, title:'Confirmar con Hardware el formato del dato serial', crit:'Acordar si es CSV inline o valor simple, documentado', col:'todo', who:'', blocked:true, blockReason:'Esperando reunión con team Hardware' },
+  { id:'s3-2', sprint:3, title:'Adaptar el script de lectura al formato confirmado', crit:'Script listo, testeado con datos demo del formato correcto', col:'todo', who:'', blocked:false },
+  { id:'s3-3', sprint:3, title:'Primera prueba real con Arduino conectado', crit:'Al menos 10 lecturas reales guardadas en CSV', col:'todo', who:'', blocked:true, blockReason:'Hardware no entregó Arduino todavía' },
+  // SPRINT 4
+  { id:'s4-1', sprint:4, title:'Dashboard en tiempo real funcionando', crit:'Gráfico se actualiza solo cada segundo con datos reales', col:'todo', who:'', blocked:false },
+  { id:'s4-2', sprint:4, title:'Captura del gráfico final para el afiche', crit:'PNG de alta calidad entregado al team Comunicación', col:'todo', who:'', blocked:false },
+  { id:'s4-3', sprint:4, title:'Reporte en consola imprimible para el stand', crit:'Promedio, máximo, mínimo y activaciones visibles', col:'todo', who:'', blocked:false },
+];
+
+function getStories(){
+  if(!STATE.scrum.stories){
+    STATE.scrum.stories = JSON.parse(JSON.stringify(DEFAULT_STORIES));
+    saveState();
+  }
+  return STATE.scrum.stories;
+}
+function findStory(id){ return getStories().find(s=>s.id===id); }
+function saveScrum(){ saveState(); }
+
+/* ---------- MOD 4.1 BACKLOG ---------- */
+MOD_BODY['m4.1'] = (m) => {
+  const stories = getStories();
+  const sprints = [1,2,3,4];
+  const sprintTitles = {
+    1:'Fundamentos',
+    2:'Limpieza y gráficos',
+    3:'Integración con Hardware',
+    4:'Entregable final',
+  };
+  return `
+${moduleHeader(m)}
+
+<div class="panel p-5 mb-6" style="background:#0e1a14;">
+  <div class="text-xs mono muted mb-2">ÉPICA</div>
+  <div class="text-lg font-semibold accent">🎯 Sistema de datos funcionando para la feria</div>
+  <p class="text-sm muted mt-1">El team Software entrega un pipeline completo: leer datos del sensor → limpiarlos → graficarlos → dashboard en vivo.</p>
+</div>
+
+<!-- Sprints -->
+${sprints.map(sp=>{
+  const sprintStories = stories.filter(s=>s.sprint===sp);
+  const done = sprintStories.filter(s=>s.col==='done').length;
+  const pct = Math.round((done/sprintStories.length)*100);
+  return `
+  <div class="panel mb-4">
+    <div class="p-4 flex items-center justify-between border-b border-[var(--border)]">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="chip mono">Sprint ${sp}</span>
+          <span class="font-semibold">${sprintTitles[sp]}</span>
+        </div>
+        <div class="text-[11px] muted mt-1">${done} / ${sprintStories.length} historias completadas</div>
+      </div>
+      <div class="text-right">
+        <div class="mono accent text-2xl">${pct}%</div>
+        <div class="progress-bar mt-1" style="width:120px"><div style="width:${pct}%"></div></div>
+      </div>
+    </div>
+    <div class="p-3 space-y-2">
+      ${sprintStories.map(st=>`
+        <div class="panel-2 p-3 flex items-start gap-3">
+          <input type="checkbox" class="mt-1 accent-[var(--accent)]" ${st.col==='done'?'checked':''}
+            onchange="toggleStoryDone('${st.id}', this.checked)" />
+          <div class="flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="text-sm ${st.col==='done'?'line-through muted':''}">${st.title}</div>
+              ${st.blocked?`<span class="chip" style="background:#3c0010;color:#ff7799;border-color:#551122;" title="${st.blockReason||''}">🚫 Bloqueada</span>`:''}
+              ${st.col==='doing'?`<span class="chip" style="background:#003c5c;color:#5cc0ff;border-color:#005580;">🔄 En progreso</span>`:''}
+              ${st.col==='review'?`<span class="chip" style="background:#3c3000;color:#ffcc55;border-color:#554a00;">👁️ En revisión</span>`:''}
+              ${st.col==='done'?`<span class="chip" style="background:#003c1a;color:#5fffaa;border-color:#00553a;">✅ Hecho</span>`:''}
+            </div>
+            <div class="text-[11px] muted mt-1">✓ <em>${st.crit}</em></div>
+            ${st.blocked?`<div class="text-[11px] mt-1" style="color:#ff7788">🚫 ${st.blockReason||'Bloqueado'}</div>`:''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}).join('')}
+
+<!-- Dependencias -->
+<div class="grid grid-cols-2 gap-4 mb-6 mt-8">
+  <div class="panel p-5">
+    <div class="flex items-center gap-2 mb-3">
+      <span style="font-size:18px">⬅</span>
+      <div class="font-semibold text-sm">Necesita de Hardware</div>
+    </div>
+    <ul class="text-sm muted space-y-2">
+      <li>→ Confirmación del formato del dato serial <span class="text-[11px]">(Sprint 3)</span></li>
+      <li>→ Confirmación del umbral de humedad para el gráfico</li>
+      <li>→ Arduino disponible para prueba real al menos en Sprint 3</li>
+    </ul>
+  </div>
+  <div class="panel p-5">
+    <div class="flex items-center gap-2 mb-3">
+      <span style="font-size:18px">➡</span>
+      <div class="font-semibold text-sm">Entrega a Comunicación</div>
+    </div>
+    <ul class="text-sm muted space-y-2">
+      <li>→ Captura del gráfico final (PNG) para el afiche <span class="text-[11px]">(antes Sprint 4)</span></li>
+      <li>→ Demo del dashboard en tiempo real para filmar el video</li>
+    </ul>
+  </div>
+</div>
+
+<div class="panel p-4" style="background:#0a1f15;border-color:#00553a;">
+  <div class="text-sm">💡 <strong>Tip:</strong> Para mover historias entre <em>"Por hacer / En progreso / En revisión / Hecho"</em>, andá al <strong>Módulo 4.2 · Sprintboard</strong>. Acá solo ves el resumen.</div>
+</div>
+`;
+};
+
+function toggleStoryDone(id, checked){
+  const s = findStory(id);
+  if(!s) return;
+  s.col = checked ? 'done' : 'todo';
+  saveScrum();
+  renderModule(STATE.current);
+}
+
+/* ---------- MOD 4.2 KANBAN ---------- */
+MOD_BODY['m4.2'] = (m) => {
+  const stories = getStories();
+  const cols = [
+    {id:'todo',   t:'Por hacer',     ic:'📋', tint:'#222'},
+    {id:'doing',  t:'En progreso',   ic:'🔄', tint:'#003c5c'},
+    {id:'review', t:'En revisión',   ic:'👁️', tint:'#3c3000'},
+    {id:'done',   t:'Hecho',         ic:'✅', tint:'#003c1a'},
+  ];
+  return `
+${moduleHeader(m)}
+<p class="text-sm muted mb-4">Arrastrá las tarjetas entre columnas. Click en una tarjeta para ver el criterio y asignar dueño. Todo se guarda automáticamente.</p>
+
+<div class="flex gap-3 mb-6 items-center text-xs">
+  <button class="btn" onclick="exportDaily()">📋 Reportar al Scrum Master</button>
+  <button class="btn btn-ghost text-[11px] muted" onclick="resetBoard()">↺ Resetear tablero</button>
+  <div class="flex-1"></div>
+  <span class="muted">Filtrar:</span>
+  <select id="kbn-sprint" class="bg-[var(--surface2)] border border-[var(--border)] rounded px-2 py-1 text-xs mono" onchange="filterBoard()">
+    <option value="all">Todos los sprints</option>
+    <option value="1">Sprint 1</option>
+    <option value="2">Sprint 2</option>
+    <option value="3">Sprint 3</option>
+    <option value="4">Sprint 4</option>
+  </select>
+</div>
+
+<div class="grid grid-cols-4 gap-3" id="kanban">
+${cols.map(c=>`
+  <div class="panel-2 p-3 kanban-col" data-col="${c.id}" style="border-top:3px solid ${c.tint};">
+    <div class="flex items-center justify-between mb-3 text-xs font-semibold">
+      <span>${c.ic} ${c.t}</span>
+      <span class="muted mono" id="cnt-${c.id}">0</span>
+    </div>
+    <div class="kanban-drop space-y-2" data-col="${c.id}" style="min-height:200px;"></div>
+  </div>
+`).join('')}
+</div>
+
+<style>
+  .kbn-card{background:#0a0a0a;border:1px solid var(--border);border-radius:8px;padding:10px;cursor:grab;font-size:12px;transition:all .15s;}
+  .kbn-card:hover{border-color:#444;}
+  .kbn-card.dragging{opacity:.4;cursor:grabbing;}
+  .kanban-drop.drag-over{background:#0a1f15;outline:1px dashed var(--accent);outline-offset:-4px;border-radius:6px;}
+  .kbn-card.blocked{border-color:#551122;}
+  .kbn-card .sprint-badge{display:inline-block;font-size:9px;padding:1px 5px;background:#1a1a1a;border:1px solid #333;border-radius:3px;color:#aaa;}
+  .kbn-card .who{font-size:10px;color:#888;margin-top:6px;font-family:monospace;}
+  .kbn-card .crit{font-size:10px;color:#666;margin-top:6px;display:none;}
+  .kbn-card.expanded .crit{display:block;}
+</style>
+
+<div id="kbn-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,.7);">
+  <div class="panel-2 p-5 w-[420px] max-w-[95vw]">
+    <div class="flex justify-between items-start mb-3">
+      <div class="text-xs muted">Editar historia</div>
+      <button onclick="closeStoryModal()" class="btn">✕</button>
+    </div>
+    <div id="kbn-modal-body"></div>
+  </div>
+</div>
+`;
+};
+
+MOD_AFTER['m4.2'] = () => {
+  renderBoard();
+};
+
+function renderBoard(){
+  const stories = getStories();
+  const filter = document.getElementById('kbn-sprint')?.value || 'all';
+  ['todo','doing','review','done'].forEach(col=>{
+    const drop = document.querySelector(`.kanban-drop[data-col="${col}"]`);
+    if(!drop) return;
+    drop.innerHTML='';
+    const filtered = stories.filter(s=>s.col===col && (filter==='all' || s.sprint==+filter));
+    document.getElementById('cnt-'+col).textContent = filtered.length;
+    filtered.forEach(st=>{
+      const card = document.createElement('div');
+      card.className='kbn-card'+(st.blocked?' blocked':'');
+      card.draggable=true;
+      card.dataset.id=st.id;
+      card.innerHTML = `
+        <div class="flex items-start gap-2">
+          <span class="sprint-badge">S${st.sprint}</span>
+          ${st.blocked?'<span title="'+(st.blockReason||'')+'">🚫</span>':''}
+        </div>
+        <div class="mt-2">${st.title}</div>
+        <div class="crit">✓ ${st.crit}</div>
+        ${st.who?`<div class="who">👤 ${st.who}</div>`:''}
+      `;
+      card.addEventListener('dragstart',e=>{
+        e.dataTransfer.setData('text/plain', st.id);
+        card.classList.add('dragging');
+      });
+      card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+      card.addEventListener('click',()=>openStoryModal(st.id));
+      drop.appendChild(card);
+    });
+  });
+  // setup drop targets
+  document.querySelectorAll('.kanban-drop').forEach(drop=>{
+    drop.ondragover = e=>{ e.preventDefault(); drop.classList.add('drag-over'); };
+    drop.ondragleave = ()=> drop.classList.remove('drag-over');
+    drop.ondrop = e=>{
+      e.preventDefault();
+      drop.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain');
+      const s = findStory(id);
+      if(s){ s.col = drop.dataset.col; saveScrum(); renderBoard(); }
+    };
+  });
+}
+
+function filterBoard(){ renderBoard(); }
+
+function openStoryModal(id){
+  const s = findStory(id);
+  if(!s) return;
+  const modal = document.getElementById('kbn-modal');
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+  document.getElementById('kbn-modal-body').innerHTML = `
+    <div class="flex items-center gap-2 mb-2">
+      <span class="chip mono">Sprint ${s.sprint}</span>
+      ${s.blocked?'<span class="chip" style="background:#3c0010;color:#ff7799;border-color:#551122;">🚫 Bloqueada</span>':''}
+    </div>
+    <h3 class="text-base font-semibold mb-3">${s.title}</h3>
+    <div class="panel-2 p-3 mb-3 text-xs"><span class="muted">Criterio de aceptación:</span><br>✓ <em>${s.crit}</em></div>
+
+    <label class="text-xs muted">¿Quién lo tiene?</label>
+    <input id="who-input" type="text" value="${s.who||''}" placeholder="Tu nombre"
+      class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mono mt-1 mb-3"
+      oninput="findStory('${s.id}').who=this.value;saveScrum();"/>
+
+    <label class="text-xs muted">Estado</label>
+    <select class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mono mt-1 mb-3"
+      onchange="findStory('${s.id}').col=this.value;saveScrum();renderBoard();">
+      <option value="todo"   ${s.col==='todo'?'selected':''}>📋 Por hacer</option>
+      <option value="doing"  ${s.col==='doing'?'selected':''}>🔄 En progreso</option>
+      <option value="review" ${s.col==='review'?'selected':''}>👁️ En revisión</option>
+      <option value="done"   ${s.col==='done'?'selected':''}>✅ Hecho</option>
+    </select>
+
+    <label class="text-xs muted flex items-center gap-2">
+      <input type="checkbox" ${s.blocked?'checked':''} class="accent-[var(--accent)]"
+        onchange="findStory('${s.id}').blocked=this.checked;saveScrum();renderBoard();"/>
+      Bloqueada
+    </label>
+    <input id="blk-input" type="text" value="${s.blockReason||''}" placeholder="¿Por qué está bloqueada?"
+      class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-xs mono mt-2"
+      oninput="findStory('${s.id}').blockReason=this.value;saveScrum();"/>
+  `;
+}
+function closeStoryModal(){
+  document.getElementById('kbn-modal').classList.add('hidden');
+  document.getElementById('kbn-modal').classList.remove('flex');
+  renderBoard();
+}
+function resetBoard(){
+  if(!confirm('¿Resetear el tablero a su estado inicial?')) return;
+  STATE.scrum.stories = JSON.parse(JSON.stringify(DEFAULT_STORIES));
+  saveScrum(); renderBoard();
+}
+
+function exportDaily(){
+  const stories = getStories();
+  const cols = {todo:'📋 Por hacer', doing:'🔄 En progreso', review:'👁️ En revisión', done:'✅ Hecho'};
+  let txt = `REPORTE TEAM SOFTWARE — ${new Date().toLocaleDateString('es-AR')}\n` + '═'.repeat(50)+'\n';
+  for(const col of Object.keys(cols)){
+    const items = stories.filter(s=>s.col===col);
+    if(!items.length) continue;
+    txt += `\n${cols[col]} (${items.length})\n`;
+    items.forEach(s=>{
+      txt += `  • [S${s.sprint}] ${s.title}${s.who?' — '+s.who:''}${s.blocked?' 🚫':''}\n`;
+    });
+  }
+  const blocked = stories.filter(s=>s.blocked);
+  if(blocked.length){
+    txt += `\n🚫 BLOQUEOS\n`;
+    blocked.forEach(s=> txt += `  • ${s.title}\n    razón: ${s.blockReason||'(sin razón)'}\n`);
+  }
+  copyText(txt);
+}
+
+/* ---------- MOD 4.3 DAILY ---------- */
+MOD_BODY['m4.3'] = (m) => {
+  const dailies = STATE.scrum.dailies;
+  return `
+${moduleHeader(m)}
+
+<div class="panel p-5 mb-6" style="background:#0e1a14;">
+  <div class="text-sm">🌅 <strong>El Daily</strong> es una reunión <em>cortita</em> al principio de cada clase. Cada uno dice 3 cosas: qué hizo, qué va a hacer, y si algo lo traba. <strong>Completá este form antes del Daily</strong> y vas re preparado.</div>
+</div>
+
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-4">FORMULARIO DE DAILY</div>
+
+  <div class="space-y-4">
+    <div>
+      <label class="text-xs muted">Nombre</label>
+      <input id="d-name" type="text" placeholder="Tu nombre"
+        class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2.5 text-sm mt-1"/>
+    </div>
+    <div>
+      <label class="text-xs muted">🟢 ¿Qué script/tarea terminé desde el último Daily?</label>
+      <textarea id="d-done" placeholder="Ej: Terminé el Script 1 con el CSV demo y corrí df.describe()..."
+        class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2.5 text-sm mt-1" style="min-height:60px;"></textarea>
+    </div>
+    <div>
+      <label class="text-xs muted">🎯 ¿Qué voy a hacer hoy?</label>
+      <textarea id="d-today" placeholder="Ej: Voy a empezar el Script 2 de limpieza..."
+        class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2.5 text-sm mt-1" style="min-height:60px;"></textarea>
+    </div>
+    <div>
+      <label class="text-xs muted">🚫 ¿Hay algo que me traba? (bloqueo técnico, falta de dato de Hardware, etc.)</label>
+      <textarea id="d-block" placeholder="Si no hay bloqueos, dejalo vacío"
+        class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2.5 text-sm mt-1" style="min-height:60px;"></textarea>
+    </div>
+
+    <div class="flex justify-end">
+      <button class="btn btn-accent" onclick="saveDaily()">Enviar Daily ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Historial -->
+<div class="text-xs mono muted mb-3">HISTORIAL DE DAILIES (${dailies.length})</div>
+<div id="daily-history" class="space-y-3">
+${dailies.length===0
+  ? `<div class="panel p-6 text-center text-sm muted">Todavía no enviaste ningún Daily. Mandá el primero cuando empieces la próxima clase.</div>`
+  : dailies.slice().reverse().map(d=>`
+    <div class="panel p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-semibold">${d.name||'(sin nombre)'}</div>
+        <div class="text-[11px] muted mono">${d.ts}</div>
+      </div>
+      ${d.done?`<div class="text-xs mb-1"><span class="accent">🟢</span> <span class="muted">Terminé:</span> ${d.done}</div>`:''}
+      ${d.today?`<div class="text-xs mb-1"><span style="color:#5cc0ff">🎯</span> <span class="muted">Hoy:</span> ${d.today}</div>`:''}
+      ${d.block?`<div class="text-xs"><span style="color:#ff7788">🚫</span> <span class="muted">Bloqueo:</span> ${d.block}</div>`:''}
+    </div>
+  `).join('')
+}
+</div>
+`;
+};
+
+function saveDaily(){
+  const name = document.getElementById('d-name').value.trim();
+  const done = document.getElementById('d-done').value.trim();
+  const today = document.getElementById('d-today').value.trim();
+  const block = document.getElementById('d-block').value.trim();
+  if(!name && !done && !today){ toast('Completá al menos algo'); return; }
+  const ts = new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  STATE.scrum.dailies.push({name,done,today,block,ts});
+  saveScrum();
+  toast('✓ Daily registrado');
+  renderModule(STATE.current);
+}
+
+/* ---------- MOD 4.4 REVIEW + RETRO ---------- */
+const REVIEW_CHECKS = [
+  'Demo en vivo del script terminado (no slides — correr el código)',
+  'Mostrar el CSV generado',
+  'Mostrar el gráfico PNG producido',
+  'Decir qué quedó pendiente y por qué',
+];
+
+MOD_BODY['m4.4'] = (m) => {
+  return `
+${moduleHeader(m)}
+
+<div class="grid grid-cols-2 gap-6">
+
+  <!-- SPRINT REVIEW -->
+  <div>
+    <div class="text-xs mono muted mb-3">SPRINT REVIEW</div>
+    <p class="text-sm muted mb-4">Al final de cada Sprint el team muestra qué hizo, en vivo, frente a los demás teams. Esta checklist te sirve para no olvidarte de nada.</p>
+
+    ${[1,2,3,4].map(sp=>`
+      <details class="panel mb-3" ${sp===1?'open':''}>
+        <summary class="p-3 flex items-center gap-3">
+          <span class="accordion-arrow accent">›</span>
+          <span class="chip mono">Sprint ${sp}</span>
+          <span class="font-semibold text-sm">Checklist Review</span>
+          <span class="ml-auto text-[11px] muted">${
+            REVIEW_CHECKS.filter((_,i)=>(STATE.scrum.review['s'+sp+'-'+i])).length
+          } / ${REVIEW_CHECKS.length}</span>
+        </summary>
+        <div class="px-4 pb-4 space-y-2">
+          ${REVIEW_CHECKS.map((c,i)=>`
+            <label class="flex items-start gap-3 text-sm cursor-pointer">
+              <input type="checkbox" class="mt-1 accent-[var(--accent)]"
+                ${STATE.scrum.review['s'+sp+'-'+i]?'checked':''}
+                onchange="STATE.scrum.review['s${sp}-${i}']=this.checked;saveScrum();renderModule(STATE.current);" />
+              <span>${c}</span>
+            </label>
+          `).join('')}
+        </div>
+      </details>
+    `).join('')}
+  </div>
+
+  <!-- RETROSPECTIVA -->
+  <div>
+    <div class="text-xs mono muted mb-3">RETROSPECTIVA RÁPIDA</div>
+    <p class="text-sm muted mb-4">Al final del Sprint: ¿qué salió bien, qué nos trabó, qué cambiamos? Tres frases nada más.</p>
+
+    ${[1,2,3,4].map(sp=>{
+      const r = STATE.scrum.retro['s'+sp] || {good:'',bad:'',change:''};
+      return `
+      <details class="panel mb-3" ${sp===1?'open':''}>
+        <summary class="p-3 flex items-center gap-3">
+          <span class="accordion-arrow accent">›</span>
+          <span class="chip mono">Sprint ${sp}</span>
+          <span class="font-semibold text-sm">Retro</span>
+        </summary>
+        <div class="px-4 pb-4 space-y-3">
+          <div>
+            <label class="text-xs accent">🟢 ¿Qué salió bien?</label>
+            <textarea oninput="retroSave(${sp},'good',this.value)" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1" style="min-height:50px;" placeholder="...">${r.good||''}</textarea>
+          </div>
+          <div>
+            <label class="text-xs" style="color:#ff7788">🔴 ¿Qué nos trabó?</label>
+            <textarea oninput="retroSave(${sp},'bad',this.value)" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1" style="min-height:50px;" placeholder="...">${r.bad||''}</textarea>
+          </div>
+          <div>
+            <label class="text-xs" style="color:#ffcc55">🟡 ¿Qué cambiamos para el próximo?</label>
+            <textarea oninput="retroSave(${sp},'change',this.value)" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1" style="min-height:50px;" placeholder="...">${r.change||''}</textarea>
+          </div>
+        </div>
+      </details>`;
+    }).join('')}
+  </div>
+</div>
+`;
+};
+
+function retroSave(sp, field, val){
+  STATE.scrum.retro['s'+sp] = STATE.scrum.retro['s'+sp] || {};
+  STATE.scrum.retro['s'+sp][field] = val;
+  saveScrum();
+}
+</script>
+
+<!-- =========================================================== -->
+<!-- CSV GENERATOR                                                 -->
+<!-- =========================================================== -->
+<script>
+function openCsvGen(){ document.getElementById('csv-modal').classList.remove('hidden'); document.getElementById('csv-modal').classList.add('flex'); genCsv(); }
+function closeCsvGen(){ document.getElementById('csv-modal').classList.add('hidden'); document.getElementById('csv-modal').classList.remove('flex'); }
+let LAST_CSV = '';
+
+function genCsv(){
+  const rows = +document.getElementById('g-rows').value;
+  const hum0 = +document.getElementById('g-hum').value;
+  const vari = +document.getElementById('g-var').value;
+  const tmean = +document.getElementById('g-temp').value;
+  const thr = +document.getElementById('g-thr').value;
+  const interval = +document.getElementById('g-int').value;
+  document.getElementById('g-rows-v').textContent=rows;
+  document.getElementById('g-hum-v').textContent=hum0;
+  document.getElementById('g-var-v').textContent=vari;
+  document.getElementById('g-temp-v').textContent=tmean+'°';
+  document.getElementById('g-thr-v').textContent=thr;
+
+  let csv='timestamp,humedad,temperatura,bomba_activa\n';
+  let h=hum0, t=new Date('2024-01-15T08:00:00');
+  let bombaTtl=0;
+  const rowsArr=[];
+  for(let i=0;i<rows;i++){
+    // drift toward dry; bomba raises humidity
+    let bomba = 0;
+    if(bombaTtl>0){ bomba=1; bombaTtl--; h += vari*2; }
+    else if(h<thr){ bomba=1; bombaTtl=3; h += vari*2; }
+    else { h -= vari*0.6 + Math.random()*vari; }
+    h = Math.max(50, Math.min(1023, Math.round(h + (Math.random()-0.5)*vari)));
+    const temp = (tmean + (Math.random()-0.5)*2).toFixed(1);
+    const ts = t.toISOString().replace('T',' ').slice(0,19);
+    csv += `${ts},${h},${temp},${bomba}\n`;
+    rowsArr.push({ts,h,temp,bomba});
+    t = new Date(t.getTime() + interval*1000);
+  }
+  LAST_CSV = csv;
+
+  // preview
+  const head = rowsArr.slice(0,10);
+  let html = '<table class="df"><thead><tr><th>timestamp</th><th>humedad</th><th>temp</th><th>bomba</th></tr></thead><tbody>';
+  for(const r of head){
+    html += `<tr ${r.bomba?'class="row-bad"':''}><td>${r.ts}</td><td>${r.h}</td><td>${r.temp}</td><td>${r.bomba}</td></tr>`;
+  }
+  html+='</tbody></table>';
+  const prev = document.getElementById('csv-preview');
+  if(prev) prev.innerHTML = html;
+}
+function copyCsv(){ copyText(LAST_CSV); }
+function downloadCsv(){
+  const blob=new Blob([LAST_CSV],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download='datos_demo.csv'; a.click();
+  URL.revokeObjectURL(url); toast('⬇️ Descargado datos_demo.csv');
+}
+
+// hook generator sliders
+document.addEventListener('DOMContentLoaded', ()=>{
+  ['g-rows','g-hum','g-var','g-temp','g-thr','g-int'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('input', genCsv);
+  });
+});
+</script>
+
+</body>
+</html>

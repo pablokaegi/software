@@ -1,0 +1,2143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Arduino desde Cero · Comunicación del Proyecto</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --bg:#0a0a0a; --surface:#111111; --surface2:#1a1a1a; --surface3:#222222;
+    --accent:#00ff88;          /* verde de la serie */
+    --com:#ff6b35;             /* naranja del team comunicación */
+    --com-dim:#ff6b3522;
+    --blue:#3b82f6;
+    --text:#e6e6e6; --muted:#888888; --border:#262626;
+    --red:#ff5577; --yellow:#ffcc00;
+  }
+  html,body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,system-ui,sans-serif;}
+  .mono{font-family:'JetBrains Mono','Fira Code','Menlo',monospace;}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;}
+  .panel-2{background:var(--surface2);border:1px solid var(--border);border-radius:10px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;font-size:11px;border:1px solid var(--border);background:var(--surface2);}
+  .accent{color:var(--accent);}
+  .com{color:var(--com);}
+  .muted{color:var(--muted);}
+  .pulse-dot{display:inline-block;width:8px;height:8px;border-radius:999px;background:var(--com);box-shadow:0 0 8px var(--com);animation:pulse 1.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.45;transform:scale(.8);}}
+  .module-link{display:block;padding:8px 10px;border-radius:6px;font-size:13px;color:#bdbdbd;border-left:2px solid transparent;cursor:pointer;}
+  .module-link:hover{background:var(--surface2);color:#fff;}
+  .module-link.active{background:#2a1208;color:var(--com);border-left-color:var(--com);}
+  .module-link.done::before{content:"✓ ";color:var(--com);font-size:11px;}
+  .module-link.pending::before{content:"○ ";color:#444;font-size:11px;}
+  .block-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#666;padding:14px 10px 6px;}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;transition:all .15s;}
+  .btn:hover{background:var(--surface3);border-color:#444;}
+  .btn-accent{background:var(--com);color:#1a0a00;border-color:var(--com);}
+  .btn-accent:hover{background:#ff8855;border-color:#ff8855;}
+  .btn-green{background:var(--accent);color:#001a0d;border-color:var(--accent);}
+  .btn-ghost{background:transparent;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:#2a1208;color:var(--com);border:1px solid var(--com);padding:10px 18px;border-radius:8px;font-size:13px;transition:all .25s;z-index:50;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .badge-basico{background:#003c1a;color:#5fffaa;border:1px solid #00553a;}
+  .badge-inter{background:#3c3000;color:#ffcc55;border:1px solid #554a00;}
+  .badge-avanz{background:#3c0010;color:#ff7799;border:1px solid #551122;}
+  .badge-imp{background:#2a1208;color:#ff8855;border:1px solid #553318;}
+  .badge-film{background:#08172a;color:#5cc0ff;border:1px solid #1d3a5c;}
+  .badge-design{background:#1a0a2a;color:#c79bff;border:1px solid #3a1d5c;}
+  .badge-stand{background:#0a2a18;color:#5fffaa;border:1px solid #1d5c3a;}
+  .kbd{font-family:'JetBrains Mono',monospace;background:#222;border:1px solid #333;border-bottom-width:2px;padding:1px 6px;border-radius:4px;font-size:11px;color:#ddd;}
+  details > summary{cursor:pointer;list-style:none;}
+  details > summary::-webkit-details-marker{display:none;}
+  details[open] .accordion-arrow{transform:rotate(90deg);}
+  .accordion-arrow{transition:transform .2s;display:inline-block;}
+  .progress-bar{height:4px;background:#1a1a1a;border-radius:999px;overflow:hidden;}
+  .progress-bar > div{height:100%;background:linear-gradient(90deg,var(--com),var(--accent));transition:width .4s;}
+  .copy-btn{position:absolute;top:8px;right:8px;font-size:11px;padding:4px 10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#aaa;cursor:pointer;z-index:5;}
+  .copy-btn:hover{color:var(--com);border-color:var(--com);}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-track{background:#0a0a0a;}
+  ::-webkit-scrollbar-thumb{background:#222;border-radius:4px;}
+  ::-webkit-scrollbar-thumb:hover{background:#333;}
+  .quiz-opt{padding:10px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;gap:10px;align-items:flex-start;transition:all .15s;}
+  .quiz-opt:hover{background:var(--surface3);border-color:#444;}
+  .quiz-opt.correct{background:#062b1a;border-color:var(--accent);color:#aaffd0;}
+  .quiz-opt.wrong{background:#2b0b15;border-color:var(--red);color:#ffaabb;}
+  .quiz-opt.disabled{cursor:default;}
+  .fade-in{animation:fadeIn .4s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .com-logo{
+    width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,#ff8855,#ff3300);
+    display:flex;align-items:center;justify-content:center;font-size:13px;
+  }
+  .swatch{height:80px;border-radius:8px;display:flex;align-items:flex-end;padding:8px;color:#000;font-family:monospace;font-size:11px;font-weight:600;cursor:pointer;}
+  .icon-card{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all .15s;}
+  .icon-card:hover{border-color:var(--com);color:var(--com);}
+  .icon-card svg{width:32px;height:32px;}
+  .poster-zone{cursor:pointer;transition:all .15s;}
+  .poster-zone:hover{filter:brightness(1.4);}
+  .poster-zone.active{outline:2px solid var(--com);outline-offset:-2px;}
+  /* poster preview live */
+  .poster-preview{aspect-ratio: 0.707; background:#fff;color:#000;border-radius:6px;padding:24px;font-family:'Inter',sans-serif;display:flex;flex-direction:column;gap:10px;}
+  .timer-big{font-family:'JetBrains Mono',monospace;font-size:72px;font-weight:700;}
+  .scene-row{display:grid;grid-template-columns:60px 1fr 90px;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);}
+  table.script{width:100%;border-collapse:collapse;}
+  table.script th, table.script td{border:1px solid #2a2a2a;padding:8px;text-align:left;font-size:12px;vertical-align:top;}
+  table.script th{background:#1a1a1a;color:var(--com);font-size:11px;text-transform:uppercase;letter-spacing:.05em;}
+  table.script input, table.script textarea{background:transparent;border:0;width:100%;color:#e6e6e6;font:inherit;resize:vertical;}
+  table.script textarea{min-height:50px;}
+  /* poster zones SVG fill */
+  .pz-fill{fill:#2a1208;transition:all .2s;}
+  .pz-fill:hover{fill:#3c1a0a;}
+  .photo-card{position:relative;}
+  .photo-card.taken{border-color:#5cc0ff;background:#08172a;}
+  .photo-card.selected{border-color:var(--accent);background:#0a1f15;}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Sticky banner -->
+<div class="sticky top-0 z-40 border-b border-[var(--border)]" style="background:linear-gradient(90deg,#2a1208,#0a0a0a);">
+  <div class="px-6 py-2.5 flex items-center justify-between text-sm">
+    <div class="flex items-center gap-3">
+      <span class="pulse-dot"></span>
+      <span class="mono com">🎪 Team Comunicación</span>
+      <span class="muted">— contá lo que construimos: afiche, video, stand y feria.</span>
+    </div>
+    <div class="flex items-center gap-4 text-xs muted">
+      <span>Curso interno · Team Comunicación</span>
+      <span class="chip mono" style="border-color:#553318;color:#ff8855;">v1.0</span>
+    </div>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="flex" style="min-height:calc(100vh - 41px);">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="border-r border-[var(--border)] flex-shrink-0 flex flex-col" style="width:300px;background:#080808;">
+    <div class="p-5 border-b border-[var(--border)]">
+      <div class="flex items-center gap-3 mb-1">
+        <div class="com-logo">🎪</div>
+        <div>
+          <div class="text-sm font-semibold">Arduino desde Cero</div>
+          <div class="text-[11px] com mono">Comunicación · Afiche · Video · Stand</div>
+        </div>
+      </div>
+      <div class="mt-4">
+        <div class="flex justify-between text-[11px] muted mb-1.5">
+          <span>Progreso total</span>
+          <span><span id="progress-num">0</span>/17</span>
+        </div>
+        <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <nav id="module-nav" class="flex-1 overflow-y-auto py-2"></nav>
+
+    <div class="p-3 border-t border-[var(--border)] space-y-2">
+      <button onclick="openMasterChecklist()" class="btn w-full justify-center">
+        ✓ Checklist maestra
+      </button>
+      <button onclick="resetProgress()" class="btn btn-ghost w-full justify-center text-[11px] muted">Reiniciar progreso</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main" class="flex-1 overflow-x-hidden">
+    <div id="module-content" class="max-w-[1000px] mx-auto px-10 py-10 fade-in"></div>
+
+    <div class="max-w-[1000px] mx-auto px-10 pb-16 flex items-center justify-between">
+      <button id="prev-btn" class="btn">← Anterior</button>
+      <button id="mark-done" class="btn btn-accent">Marcar como completado ✓</button>
+      <button id="next-btn" class="btn">Siguiente →</button>
+    </div>
+  </main>
+</div>
+
+<!-- Master checklist modal -->
+<div id="master-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,.75);">
+  <div class="panel-2 w-[720px] max-w-[95vw] max-h-[90vh] overflow-y-auto p-6">
+    <div class="flex justify-between items-start mb-4">
+      <h2 class="text-lg font-semibold">✓ Checklist maestra del Team Comunicación</h2>
+      <button onclick="closeMasterChecklist()" class="btn">✕</button>
+    </div>
+    <div id="master-content"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">Copiado</div>
+
+<!-- =========================================================== -->
+<script>
+const BLOCKS = [
+  { id:'b1', title:'Bloque 1 · Identidad y narrativa' },
+  { id:'b2', title:'Bloque 2 · Materiales de comunicación' },
+  { id:'b3', title:'Bloque 3 · Video del proceso' },
+  { id:'b4', title:'Bloque 4 · Scrum del team Comunicación' },
+];
+const MODULES = [
+  { id:'m1.1', block:'b1', num:'1.1', title:'¿Qué historia contamos?', level:'basico' },
+  { id:'m1.2', block:'b1', num:'1.2', title:'Identidad visual del proyecto', level:'basico' },
+  { id:'m1.3', block:'b1', num:'1.3', title:'El nombre y el eslogan', level:'basico' },
+
+  { id:'m2.1', block:'b2', num:'2.1', title:'El afiche de la feria', level:'inter' },
+  { id:'m2.2', block:'b2', num:'2.2', title:'Decoración del stand y del aula', level:'inter' },
+  { id:'m2.3', block:'b2', num:'2.3', title:'Fotografía del proceso', level:'inter' },
+  { id:'m2.4', block:'b2', num:'2.4', title:'Autoevaluación Bloque 2', level:'inter' },
+
+  { id:'m3.1', block:'b3', num:'3.1', title:'Planificación: el guión del video', level:'inter' },
+  { id:'m3.2', block:'b3', num:'3.2', title:'Técnicas de filmación con celular', level:'inter' },
+  { id:'m3.3', block:'b3', num:'3.3', title:'Edición del video con CapCut', level:'avanz' },
+  { id:'m3.4', block:'b3', num:'3.4', title:'El QR para el stand', level:'inter' },
+  { id:'m3.5', block:'b3', num:'3.5', title:'Ensayo general del día de la feria', level:'avanz' },
+  { id:'m3.6', block:'b3', num:'3.6', title:'Autoevaluación final + Entregables', level:'avanz' },
+
+  { id:'m4.1', block:'b4', num:'4.1', title:'Backlog & historias de usuario', level:'basico' },
+  { id:'m4.2', block:'b4', num:'4.2', title:'Sprintboard Kanban', level:'basico' },
+  { id:'m4.3', block:'b4', num:'4.3', title:'Daily standup', level:'basico' },
+  { id:'m4.4', block:'b4', num:'4.4', title:'Sprint Review + Retrospectiva', level:'basico' },
+];
+
+const STATE = {
+  current: 'm1.1',
+  done: JSON.parse(localStorage.getItem('com_done')||'{}'),
+  notes: JSON.parse(localStorage.getItem('com_notes')||'{}'),
+  quiz:  JSON.parse(localStorage.getItem('com_quiz')||'{}'),
+  checks: JSON.parse(localStorage.getItem('com_checks')||'{}'),
+  fields: JSON.parse(localStorage.getItem('com_fields')||'{}'),
+  scrum: JSON.parse(localStorage.getItem('com_scrum')||'{}'),
+};
+STATE.scrum.stories = STATE.scrum.stories || null;
+STATE.scrum.dailies = STATE.scrum.dailies || [];
+STATE.scrum.review  = STATE.scrum.review  || {};
+STATE.scrum.retro   = STATE.scrum.retro   || {};
+
+function saveState(){
+  localStorage.setItem('com_done', JSON.stringify(STATE.done));
+  localStorage.setItem('com_notes', JSON.stringify(STATE.notes));
+  localStorage.setItem('com_quiz', JSON.stringify(STATE.quiz));
+  localStorage.setItem('com_checks', JSON.stringify(STATE.checks));
+  localStorage.setItem('com_fields', JSON.stringify(STATE.fields));
+  localStorage.setItem('com_scrum', JSON.stringify(STATE.scrum));
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1800);
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); toast('📋 Copiado al portapapeles'); }
+  catch{ toast('No se pudo copiar'); }
+}
+function badge(level){
+  if(level==='basico') return `<span class="chip badge-basico">🟢 Básico</span>`;
+  if(level==='inter')  return `<span class="chip badge-inter">🟡 Intermedio</span>`;
+  return `<span class="chip badge-avanz">🔴 Avanzado</span>`;
+}
+function setField(id, val){ STATE.fields[id]=val; saveState(); }
+function getField(id, def=''){ return STATE.fields[id] ?? def; }
+function setCheck(id, val){ STATE.checks[id]=val; saveState(); }
+function getCheck(id){ return !!STATE.checks[id]; }
+
+function renderSidebar(){
+  const nav=document.getElementById('module-nav');
+  let html='';
+  for(const b of BLOCKS){
+    html += `<div class="block-label">${b.title}</div>`;
+    for(const m of MODULES.filter(x=>x.block===b.id)){
+      const cls = m.id===STATE.current ? 'active' : '';
+      const done = STATE.done[m.id] ? 'done' : 'pending';
+      html += `<div class="module-link ${cls} ${done}" onclick="goTo('${m.id}')">
+        <div class="flex items-center justify-between">
+          <span><span class="mono muted">${m.num}</span>  ${m.title}</span>
+        </div>
+      </div>`;
+    }
+  }
+  nav.innerHTML=html;
+  const doneCount = Object.values(STATE.done).filter(Boolean).length;
+  document.getElementById('progress-num').textContent = doneCount;
+  document.getElementById('progress-fill').style.width = ((doneCount/MODULES.length)*100).toFixed(1)+'%';
+}
+function goTo(id){ STATE.current=id; renderSidebar(); renderModule(id); document.getElementById('main').scrollTo({top:0,behavior:'smooth'}); }
+function nextModule(){ const idx=MODULES.findIndex(m=>m.id===STATE.current); if(idx<MODULES.length-1) goTo(MODULES[idx+1].id); }
+function prevModule(){ const idx=MODULES.findIndex(m=>m.id===STATE.current); if(idx>0) goTo(MODULES[idx-1].id); }
+function markDone(){ STATE.done[STATE.current]=true; saveState(); renderSidebar(); toast('✓ Módulo completado'); setTimeout(nextModule,500); }
+function resetProgress(){
+  if(!confirm('¿Reiniciar todo el progreso?')) return;
+  STATE.done={};STATE.notes={};STATE.quiz={};STATE.checks={};STATE.fields={};STATE.scrum={stories:null,dailies:[],review:{},retro:{}};
+  saveState(); renderSidebar(); renderModule(STATE.current);
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('next-btn').onclick=nextModule;
+  document.getElementById('prev-btn').onclick=prevModule;
+  document.getElementById('mark-done').onclick=markDone;
+  renderSidebar();
+  renderModule(STATE.current);
+});
+</script>
+
+<script>
+function moduleHeader(m){
+  const blockTitle = BLOCKS.find(b=>b.id===m.block).title.split('·')[1].trim();
+  return `
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-xs mono muted">Módulo ${m.num} · ${blockTitle}</div>
+      ${badge(m.level)}
+    </div>
+    <h1 class="text-3xl font-semibold mb-1 tracking-tight">${m.title}</h1>
+    <div class="h-px bg-[var(--border)] my-6"></div>`;
+}
+function notesPanel(id){
+  const val=(STATE.notes[id]||'').replace(/</g,'&lt;');
+  return `
+    <div class="panel p-4 mt-8">
+      <div class="flex items-center gap-2 mb-2">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        <span class="text-sm">Mis notas</span>
+        <span class="text-[10px] muted">(se guardan automáticamente)</span>
+      </div>
+      <textarea oninput="STATE.notes['${id}']=this.value;saveState();" placeholder="Escribí tus notas sobre este módulo..."
+        class="w-full bg-[var(--surface2)] border border-[var(--border)] rounded p-3 text-sm font-mono"
+        style="min-height:80px;resize:vertical;">${val}</textarea>
+    </div>`;
+}
+function renderModule(id){
+  const m=MODULES.find(x=>x.id===id);
+  if(!m) return;
+  const out=document.getElementById('module-content');
+  out.classList.remove('fade-in'); void out.offsetWidth; out.classList.add('fade-in');
+  out.innerHTML = MOD_BODY[id](m) + notesPanel(id);
+  if(MOD_AFTER[id]) MOD_AFTER[id]();
+}
+
+const MOD_BODY={}; const MOD_AFTER={};
+
+/* ============ M 1.1 ============ */
+MOD_BODY['m1.1'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Comunicación no es "decorar al final": es <strong>contar una historia</strong>. Esa historia tiene un arco, igual que una película.</p>
+
+<!-- Arco narrativo interactivo -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-4">ARCO NARRATIVO DEL PROYECTO</div>
+  <div class="grid grid-cols-6 gap-2 mb-4">
+    ${['Problema','Idea','Diseño','Construcción','Prueba','Resultado'].map((s,i)=>`
+      <div class="text-center cursor-pointer arc-step" data-step="${i}">
+        <div class="w-12 h-12 mx-auto rounded-full flex items-center justify-center mb-2"
+             style="background:#1a1a1a;border:2px solid #333;font-size:18px;">
+          ${['❓','💡','📐','🔧','🧪','🌱'][i]}
+        </div>
+        <div class="text-[11px] mono">${s}</div>
+      </div>
+    `).join('')}
+  </div>
+  <div id="arc-info" class="panel-2 p-4 text-sm muted">
+    👆 Hacé click en cada etapa para ver qué contenido visual corresponde.
+  </div>
+</div>
+
+<!-- Mostrar vs Contar -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+  <div class="panel p-5">
+    <div class="text-xs muted mb-2">✗ Mostrar QUÉ hicimos</div>
+    <div class="text-sm mb-3">"Conectamos un sensor de humedad a un Arduino UNO. Programamos un script en Python. Hicimos un gráfico con matplotlib."</div>
+    <div class="text-[11px]" style="color:#ff7788">→ Aburrido. Técnico. No engancha al visitante.</div>
+  </div>
+  <div class="panel p-5" style="border-color:#553318;">
+    <div class="text-xs com mb-2">✓ Contar POR QUÉ importa</div>
+    <div class="text-sm mb-3">"¿Cuántas plantas se mueren cada año porque alguien se olvidó de regarlas? Nosotros construimos un sistema que riega solo cuando la tierra está seca."</div>
+    <div class="text-[11px] com">→ Engancha. Resuelve un problema real.</div>
+  </div>
+</div>
+
+<!-- 3 preguntas del team -->
+<div class="panel p-6 mb-6" style="background:#1a0d05;border-color:#553318;">
+  <div class="flex items-center gap-2 mb-2">
+    <span style="font-size:20px">📝</span>
+    <div class="font-semibold">Ejercicio grupal — respondan las 3 preguntas clave</div>
+  </div>
+  <p class="text-xs muted mb-4">Estas respuestas son la <strong>base del afiche y del video</strong>. Pónganse de acuerdo entre todos antes de seguir.</p>
+
+  <div class="space-y-4">
+    <div>
+      <label class="text-xs muted">1. ¿Qué problema resuelve nuestro sistema?</label>
+      <textarea oninput="setField('q1',this.value)" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-3 text-sm mt-1" style="min-height:60px;"
+        placeholder="Ej: las plantas se mueren cuando uno se olvida de regarlas...">${getField('q1')}</textarea>
+    </div>
+    <div>
+      <label class="text-xs muted">2. ¿Quién se beneficia de esto?</label>
+      <textarea oninput="setField('q2',this.value)" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-3 text-sm mt-1" style="min-height:60px;"
+        placeholder="Ej: gente que viaja, oficinas, escuelas, productores...">${getField('q2')}</textarea>
+    </div>
+    <div>
+      <label class="text-xs muted">3. ¿Qué fue lo más difícil de construir?</label>
+      <textarea oninput="setField('q3',this.value)" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-3 text-sm mt-1" style="min-height:60px;"
+        placeholder="Ej: calibrar el sensor para que active la bomba en el momento justo...">${getField('q3')}</textarea>
+    </div>
+  </div>
+</div>
+
+<div class="panel p-4" style="background:#1a0d05;">
+  <div class="text-sm">💡 <strong class="com">Tip:</strong> Todo lo que diseñen debe poder explicarse en <strong>30 segundos</strong> a alguien que nunca vio Arduino. Si necesitan más, simplifiquen.</div>
+</div>
+`;
+MOD_AFTER['m1.1'] = () => {
+  const INFO = {
+    0:['Problema','📷 Foto de una planta marchita o un dato impactante. <strong>Va en el inicio del afiche y del video.</strong>'],
+    1:['Idea','📝 Bosquejos en papel, primer diagrama. Estas fotos muestran el <em>"momento eureka"</em> — se ven informales pero son las más auténticas.'],
+    2:['Diseño','📐 Diagramas técnicos: esquema del circuito, planos del stand. Material visual para el cuerpo del afiche.'],
+    3:['Construcción','🔧 Time-lapse o secuencia de fotos del proceso de armado. Esta es la <strong>parte más larga del video</strong> (~2 min).'],
+    4:['Prueba','🧪 El error más grande encontrado y cómo lo resolvieron. <em>¡Esto engancha!</em> No oculten los errores.'],
+    5:['Resultado','🌱 El sistema funcionando + planta sana. Cierre fuerte: número o impacto medible.'],
+  };
+  document.querySelectorAll('.arc-step').forEach(s=>{
+    s.onclick=()=>{
+      document.querySelectorAll('.arc-step .w-12').forEach(c=>c.style.borderColor='#333');
+      s.querySelector('.w-12').style.borderColor='var(--com)';
+      const [t,d]=INFO[s.dataset.step];
+      document.getElementById('arc-info').innerHTML=`<div class="com font-semibold mb-1">${t}</div><div class="text-sm">${d}</div>`;
+    };
+  });
+};
+
+/* ============ M 1.2 ============ */
+MOD_BODY['m1.2'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Una <strong>identidad visual</strong> es el conjunto de elementos que hacen que tu proyecto se vea como "uno solo": colores, tipografía, ícono y nombre. <em>Cuando todo es coherente, se ve profesional</em>.</p>
+
+<!-- Paleta -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">PALETA SUGERIDA · para impresión</div>
+  <p class="text-sm muted mb-4">Estos 4 colores funcionan bien juntos y se imprimen bien en papel. Click en cada uno para copiar el hex.</p>
+  <div class="grid grid-cols-4 gap-3">
+    ${[
+      {h:'#2ECC71',n:'Verde agua'},
+      {h:'#0066CC',n:'Azul Arduino'},
+      {h:'#2C3E50',n:'Gris pizarra'},
+      {h:'#FFFFFF',n:'Blanco',dark:true},
+    ].map(c=>`
+      <div class="swatch" style="background:${c.h};${c.dark?'border:1px solid #ddd;':''}" onclick="copyText('${c.h}')">
+        <div>
+          <div class="text-[10px] opacity-70">${c.n}</div>
+          <div>${c.h}</div>
+        </div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+
+<!-- Tipografía -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">TIPOGRAFÍA</div>
+  <div class="space-y-4">
+    <div class="panel-2 p-4">
+      <div class="text-[11px] muted mb-1">Para títulos · Montserrat Bold</div>
+      <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:34px;letter-spacing:-.02em;">HidroBot 2024</div>
+      <div class="text-[11px] muted mt-2">Gratis en Google Fonts. Moderna, impactante, lee bien desde lejos.</div>
+    </div>
+    <div class="panel-2 p-4">
+      <div class="text-[11px] muted mb-1">Para cuerpo · Open Sans Regular</div>
+      <div style="font-family:'Open Sans',sans-serif;font-size:16px;">Sistema automático de riego para plantas hidropónicas con sensor de humedad y registro de datos en tiempo real.</div>
+    </div>
+    <div class="panel-2 p-4">
+      <div class="text-[11px] muted mb-1">Para datos · Courier New</div>
+      <div class="mono" style="font-size:14px;color:var(--accent)">humedad: 487 → bomba ON</div>
+    </div>
+  </div>
+  <p class="text-[11px] muted mt-3">💡 Para descargar: fonts.google.com → buscar "Montserrat" y "Open Sans" → Download family. Courier New ya viene con Windows.</p>
+</div>
+
+<!-- Íconos -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">ÍCONOS PARA EL AFICHE</div>
+    <span class="text-[11px] muted">Click → copiar SVG</span>
+  </div>
+  <div class="grid grid-cols-6 gap-3" id="icon-grid">
+    <!-- icons injected -->
+  </div>
+</div>
+
+<div class="panel p-4" style="background:#1a0d05;">
+  <div class="text-sm">⚠ <strong>Regla de oro:</strong> usen <strong>máximo 3 colores</strong> y <strong>máximo 2 fuentes</strong> en todo el material. Más es ruido.</div>
+</div>
+`;
+MOD_AFTER['m1.2'] = () => {
+  const ICONS = [
+    {n:'Planta', svg:'<path d="M12 22V8M12 8c0-4 4-6 8-6-1 5-4 8-8 8zm0 0c0-4-4-6-8-6 1 5 4 8 8 8z"/>'},
+    {n:'Gota', svg:'<path d="M12 2c-4 5-7 9-7 13a7 7 0 0 0 14 0c0-4-3-8-7-13z"/>'},
+    {n:'Chip', svg:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 1v3M15 1v3M9 20v3M15 20v3M1 9h3M1 15h3M20 9h3M20 15h3M9 9h6v6H9z"/>'},
+    {n:'Gráfico', svg:'<path d="M3 3v18h18M7 14l4-4 4 4 5-7"/>'},
+    {n:'Sensor', svg:'<circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4M4.2 4.2l2.8 2.8M17 17l2.8 2.8M4.2 19.8l2.8-2.8M17 7l2.8-2.8"/>'},
+    {n:'WiFi', svg:'<path d="M5 12.55a11 11 0 0 1 14 0M2 8.82a15 15 0 0 1 20 0M9 16.07a6 6 0 0 1 6 0"/><circle cx="12" cy="20" r="1"/>'},
+    {n:'Cámara', svg:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>'},
+    {n:'QR', svg:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM18 14h3M14 18v3M18 21h3M21 18v3"/>'},
+    {n:'Ubicación', svg:'<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>'},
+    {n:'Pantalla', svg:'<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>'},
+    {n:'Bomba', svg:'<path d="M12 2v6M9 8h6M5 12h14v8H5zM9 16v2M15 16v2"/>'},
+    {n:'Reloj', svg:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>'},
+  ];
+  const grid = document.getElementById('icon-grid');
+  if(!grid) return;
+  grid.innerHTML = ICONS.map(ic=>{
+    const svg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic.svg}</svg>`;
+    const full = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ic.svg}</svg>`;
+    return `<div class="icon-card" onclick='copyText(${JSON.stringify(full)})'>
+      ${svg}
+      <div class="text-[10px] muted">${ic.n}</div>
+    </div>`;
+  }).join('');
+};
+
+/* ============ M 1.3 ============ */
+MOD_BODY['m1.3'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Un buen <strong>eslogan</strong> es breve, memorable y activo. En 5-7 palabras tiene que quedar claro qué hace tu proyecto.</p>
+
+<!-- Bueno vs malo -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+  <div class="panel p-5">
+    <div class="text-xs com mb-2">✓ ESLÓGANES BUENOS</div>
+    <ul class="space-y-3 text-sm">
+      <li class="panel-2 p-3"><span class="com font-semibold">"Riega solo cuando hace falta."</span><div class="text-[11px] muted mt-1">Verbo activo, breve, claro.</div></li>
+      <li class="panel-2 p-3"><span class="com font-semibold">"Tecnología que cuida lo que importa."</span><div class="text-[11px] muted mt-1">Apela a la emoción.</div></li>
+      <li class="panel-2 p-3"><span class="com font-semibold">"Sin lluvia, sin olvidos."</span><div class="text-[11px] muted mt-1">Misterioso, te invita a preguntar.</div></li>
+    </ul>
+  </div>
+  <div class="panel p-5">
+    <div class="text-xs mb-2" style="color:#ff7788">✗ ESLÓGANES MALOS</div>
+    <ul class="space-y-3 text-sm">
+      <li class="panel-2 p-3"><span style="color:#ff7788">"Sistema automatizado de riego hidropónico mediante microcontrolador."</span><div class="text-[11px] muted mt-1">Demasiado técnico, larguísimo.</div></li>
+      <li class="panel-2 p-3"><span style="color:#ff7788">"El mejor proyecto."</span><div class="text-[11px] muted mt-1">Vacío. No dice nada.</div></li>
+      <li class="panel-2 p-3"><span style="color:#ff7788">"HidroBot."</span><div class="text-[11px] muted mt-1">Es un nombre, no un eslogan.</div></li>
+    </ul>
+  </div>
+</div>
+
+<!-- Nombre + generador -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-3">DEFINÍ EL NOMBRE DEL PROYECTO</div>
+  <p class="text-sm muted mb-3">Algunos ejemplos para inspirarse:</p>
+  <div class="flex flex-wrap gap-2 mb-4">
+    ${['HidroBot','AguaInteligente','RiegoAR','VerdeTech','PlantaViva','SensaRiego','GotaJusta'].map(n=>`
+      <button class="btn text-xs" onclick="document.getElementById('nombre-input').value='${n}';setField('nombre','${n}');updatePosterPreview();">${n}</button>
+    `).join('')}
+  </div>
+  <input id="nombre-input" type="text" value="${getField('nombre','')}" placeholder="El nombre de su proyecto"
+    oninput="setField('nombre',this.value);updatePosterPreview();"
+    class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-3 text-lg font-semibold mt-2" style="font-family:Montserrat,sans-serif;"/>
+</div>
+
+<!-- Eslogan -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-3">ESCRIBÍ TU ESLOGAN</div>
+  <p class="text-sm muted mb-3">Estructuras útiles para arrancar (editá libremente):</p>
+  <div class="flex flex-wrap gap-2 mb-3">
+    ${[
+      'Riego inteligente para todos.',
+      'Cuando la tecnología cuida la naturaleza.',
+      'Tus plantas ya no dependen de vos.',
+      'Sensores que entienden a la tierra.',
+    ].map(s=>`<button class="btn text-xs" onclick="document.getElementById('eslogan-input').value='${s}';setField('eslogan','${s}');updatePosterPreview();">${s}</button>`).join('')}
+  </div>
+  <textarea id="eslogan-input" placeholder="El eslogan del proyecto en 5-7 palabras"
+    oninput="setField('eslogan',this.value);updatePosterPreview();"
+    class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-3 text-sm" style="min-height:60px;">${getField('eslogan','')}</textarea>
+</div>
+
+<!-- Preview poster -->
+<div class="panel p-6">
+  <div class="text-xs mono muted mb-3">VISTA PREVIA DEL AFICHE</div>
+  <p class="text-xs muted mb-3">Así se vería en grande. (El afiche completo lo armás en el Módulo 2.1.)</p>
+  <div id="poster-mini" class="poster-preview mx-auto" style="max-width:380px;">
+    <div class="text-xs" style="color:#888;letter-spacing:.15em;text-transform:uppercase;">Feria de Ciencias 2024</div>
+    <div id="pp-name" style="font-family:Montserrat,sans-serif;font-weight:900;font-size:42px;line-height:1;color:#2C3E50;">${getField('nombre','Tu Proyecto')}</div>
+    <div id="pp-slogan" style="font-family:'Open Sans',sans-serif;font-size:14px;color:#2ECC71;font-style:italic;">${getField('eslogan','Tu eslogan acá')}</div>
+    <div class="flex-1 flex items-end">
+      <div style="background:#0066CC;color:#fff;padding:10px 14px;border-radius:6px;font-size:11px;">Riego automatizado · Sensor de humedad · Arduino UNO</div>
+    </div>
+  </div>
+</div>
+`;
+function updatePosterPreview(){
+  const ppName = document.getElementById('pp-name');
+  const ppSlog = document.getElementById('pp-slogan');
+  if(ppName) ppName.textContent = getField('nombre','Tu Proyecto');
+  if(ppSlog) ppSlog.textContent = getField('eslogan','Tu eslogan acá');
+}
+
+/* ============ M 2.1 ============ */
+MOD_BODY['m2.1'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Un afiche de feria tiene 7 zonas. Click en cada una para ver qué poner, qué evitar y un ejemplo bueno vs malo.</p>
+
+<!-- Anatomía SVG -->
+<div class="panel p-5 mb-6">
+  <svg viewBox="0 0 400 560" class="w-full" style="max-width:380px;display:block;margin:0 auto;background:#fff;border-radius:6px;">
+    <!-- Zona 1 Título -->
+    <rect class="poster-zone pz-fill" data-zone="1" x="20" y="20" width="360" height="80"/>
+    <text x="200" y="60" text-anchor="middle" fill="#2C3E50" font-family="Montserrat" font-weight="900" font-size="32">TÍTULO</text>
+    <text x="200" y="85" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">eslogan / subtítulo</text>
+    
+    <!-- Zona 2 Problema -->
+    <rect class="poster-zone pz-fill" data-zone="2" x="20" y="110" width="170" height="100"/>
+    <text x="105" y="135" text-anchor="middle" fill="#2C3E50" font-size="12" font-family="Open Sans" font-weight="700">PROBLEMA</text>
+    <text x="105" y="155" text-anchor="middle" fill="#888" font-size="9">la pregunta que engancha</text>
+    
+    <!-- Zona 3 Cómo funciona -->
+    <rect class="poster-zone pz-fill" data-zone="3" x="200" y="110" width="180" height="180"/>
+    <text x="290" y="135" text-anchor="middle" fill="#2C3E50" font-size="12" font-family="Open Sans" font-weight="700">CÓMO FUNCIONA</text>
+    <text x="290" y="155" text-anchor="middle" fill="#888" font-size="9">diagrama simple</text>
+    <!-- mini diagrama -->
+    <circle cx="225" cy="200" r="14" fill="none" stroke="#888"/>
+    <text x="225" y="204" text-anchor="middle" fill="#888" font-size="9">S</text>
+    <line x1="240" y1="200" x2="270" y2="200" stroke="#888"/>
+    <rect x="270" y="186" width="32" height="28" fill="none" stroke="#888"/>
+    <text x="286" y="204" text-anchor="middle" fill="#888" font-size="9">A</text>
+    <line x1="302" y1="200" x2="332" y2="200" stroke="#888"/>
+    <circle cx="345" cy="200" r="10" fill="none" stroke="#888"/>
+    <text x="345" y="203" text-anchor="middle" fill="#888" font-size="8">B</text>
+    
+    <!-- Zona 4 Resultados -->
+    <rect class="poster-zone pz-fill" data-zone="4" x="20" y="220" width="170" height="100"/>
+    <text x="105" y="245" text-anchor="middle" fill="#2C3E50" font-size="12" font-family="Open Sans" font-weight="700">RESULTADOS</text>
+    <text x="105" y="285" text-anchor="middle" fill="#2ECC71" font-size="28" font-weight="700">37%</text>
+    <text x="105" y="305" text-anchor="middle" fill="#888" font-size="9">menos agua usada</text>
+    
+    <!-- Zona 5 Fotos -->
+    <rect class="poster-zone pz-fill" data-zone="5" x="20" y="330" width="360" height="120"/>
+    <text x="200" y="355" text-anchor="middle" fill="#2C3E50" font-size="12" font-family="Open Sans" font-weight="700">FOTOS DEL PROCESO</text>
+    <rect x="40" y="370" width="100" height="70" fill="#ccc"/>
+    <rect x="150" y="370" width="100" height="70" fill="#ccc"/>
+    <rect x="260" y="370" width="100" height="70" fill="#ccc"/>
+    
+    <!-- Zona 6 QR -->
+    <rect class="poster-zone pz-fill" data-zone="6" x="20" y="460" width="100" height="80"/>
+    <rect x="35" y="475" width="50" height="50" fill="#2C3E50"/>
+    <text x="70" y="500" text-anchor="middle" fill="#fff" font-size="9" font-family="monospace">QR</text>
+    
+    <!-- Zona 7 Equipo -->
+    <rect class="poster-zone pz-fill" data-zone="7" x="130" y="460" width="250" height="80"/>
+    <text x="255" y="485" text-anchor="middle" fill="#2C3E50" font-size="11" font-family="Open Sans" font-weight="700">EQUIPO</text>
+    <text x="255" y="505" text-anchor="middle" fill="#888" font-size="9">Nombres + institución</text>
+  </svg>
+
+  <div id="zone-info" class="panel-2 p-4 mt-4 text-sm muted">
+    👆 Hacé click en cada zona del afiche para ver qué poner.
+  </div>
+</div>
+
+<!-- Editor en vivo -->
+<div class="panel p-6 mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <div class="text-xs mono muted">PLANTILLA EDITABLE DEL AFICHE</div>
+    <button class="btn btn-accent" onclick="openPrintPreview()">🖨️ Vista para imprimir</button>
+  </div>
+
+  <div class="grid grid-cols-2 gap-6">
+    <div class="space-y-3">
+      <div>
+        <label class="text-xs muted">Título</label>
+        <input type="text" value="${getField('p_title', getField('nombre',''))}" placeholder="Nombre del proyecto"
+          oninput="setField('p_title',this.value);renderPoster();"
+          class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 mt-1" style="font-family:Montserrat,sans-serif;font-weight:700;"/>
+      </div>
+      <div>
+        <label class="text-xs muted">Eslogan</label>
+        <input type="text" value="${getField('p_slogan', getField('eslogan',''))}" placeholder="Eslogan corto"
+          oninput="setField('p_slogan',this.value);renderPoster();"
+          class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 mt-1"/>
+      </div>
+      <div>
+        <label class="text-xs muted">Problema (1-2 oraciones)</label>
+        <textarea oninput="setField('p_problem',this.value);renderPoster();" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 mt-1" style="min-height:60px;font-size:12px;">${getField('p_problem','')}</textarea>
+      </div>
+      <div>
+        <label class="text-xs muted">Resultado destacado (un número!)</label>
+        <input type="text" value="${getField('p_result','37%')}" placeholder="37% / 12 plantas / 2h al día"
+          oninput="setField('p_result',this.value);renderPoster();"
+          class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 mt-1"/>
+      </div>
+      <div>
+        <label class="text-xs muted">Etiqueta del resultado</label>
+        <input type="text" value="${getField('p_result_label','menos agua usada')}"
+          oninput="setField('p_result_label',this.value);renderPoster();"
+          class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 mt-1"/>
+      </div>
+      <div>
+        <label class="text-xs muted">Nombres del equipo</label>
+        <textarea oninput="setField('p_team',this.value);renderPoster();" placeholder="Nombre 1, Nombre 2, Nombre 3..."
+          class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 mt-1" style="min-height:50px;font-size:12px;">${getField('p_team','')}</textarea>
+      </div>
+      <div>
+        <label class="text-xs muted">Institución / curso</label>
+        <input type="text" value="${getField('p_inst','')}" placeholder="Escuela XX — 5to año"
+          oninput="setField('p_inst',this.value);renderPoster();"
+          class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 mt-1"/>
+      </div>
+    </div>
+
+    <div>
+      <div class="text-[11px] muted mb-2">Preview (proporción A1)</div>
+      <div id="poster-live" class="poster-preview"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Checklist afiche -->
+<div class="panel p-5">
+  <div class="text-xs mono muted mb-3">CHECKLIST DEL AFICHE</div>
+  ${[
+    'a-1','El título se lee desde 3 metros de distancia',
+    'a-2','Hay al menos un gráfico o dato numérico',
+    'a-3','Hay fotos reales del proceso (no imágenes de internet)',
+    'a-4','El QR funciona y lleva al video',
+    'a-5','Los nombres del equipo están visibles',
+    'a-6','Está impreso en al menos A2',
+  ].reduce((acc,_,i,arr)=>{if(i%2===0)acc.push([arr[i],arr[i+1]]);return acc;},[]).map(([id,txt])=>`
+    <label class="flex items-start gap-3 cursor-pointer py-1.5 text-sm">
+      <input type="checkbox" class="mt-1 accent-[var(--com)]" ${getCheck(id)?'checked':''} onchange="setCheck('${id}',this.checked)"/>
+      <span>${txt}</span>
+    </label>
+  `).join('')}
+</div>
+`;
+MOD_AFTER['m2.1'] = () => {
+  const INFO = {
+    1:['Título','Lo más grande del afiche. <strong>Tu nombre del proyecto + eslogan</strong>. Tiene que leerse desde 3 metros. <span class="com">Tipografía bold, simple.</span> ✗ Evitar: títulos largos, varias líneas con letras chicas.'],
+    2:['Problema / Pregunta','La <strong>pregunta que engancha</strong> al visitante. Ej: <em>"¿Cuántas plantas mueren cuando viajás de vacaciones?"</em> ✗ Evitar: lista de objetivos académicos formales.'],
+    3:['Cómo funciona','Un <strong>diagrama simple</strong> con flechas: Sensor → Arduino → Bomba. <span class="com">Nunca un párrafo largo de texto.</span> ✗ Evitar: copiar el código en el afiche.'],
+    4:['Resultados','Un <strong>número grande</strong> y memorable: <em>"37% menos agua"</em>, <em>"12 plantas regadas solas"</em>. ✗ Evitar: tablas densas.'],
+    5:['Fotos del proceso','<strong>3 momentos clave</strong> del Módulo 2.3. Equipo trabajando, primer error, sistema funcionando. ✗ Evitar: fotos de internet o imágenes genéricas.'],
+    6:['QR al video','Sí o sí, mínimo 4×4 cm. <strong>Texto al lado:</strong> "Escaneá para ver el video". Se genera en el Módulo 3.4. ✗ Evitar: QR diminuto que no se escanea.'],
+    7:['Equipo','<strong>Nombres + institución + curso + año</strong>. Tamaño chico pero legible (~12pt). ✗ Evitar: olvidarse de alguien del equipo.'],
+  };
+  document.querySelectorAll('.poster-zone').forEach(z=>{
+    z.onclick=()=>{
+      document.querySelectorAll('.poster-zone').forEach(x=>x.classList.remove('active'));
+      z.classList.add('active');
+      const [t,d]=INFO[z.dataset.zone];
+      document.getElementById('zone-info').innerHTML = `<div class="com font-semibold mb-1">${t}</div><div>${d}</div>`;
+    };
+  });
+  renderPoster();
+};
+function renderPoster(){
+  const el = document.getElementById('poster-live'); if(!el) return;
+  el.innerHTML = `
+    <div style="font-size:9px;color:#888;letter-spacing:.15em;text-transform:uppercase;">Feria de Ciencias 2024</div>
+    <div style="font-family:Montserrat,sans-serif;font-weight:900;font-size:30px;line-height:1;color:#2C3E50;">${(getField('p_title')||getField('nombre','TÍTULO'))||'TÍTULO'}</div>
+    <div style="font-family:'Open Sans',sans-serif;font-size:11px;color:#2ECC71;font-style:italic;">${getField('p_slogan')||getField('eslogan','')}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
+      <div style="background:#f4f4f4;padding:8px;border-radius:4px;">
+        <div style="font-size:9px;color:#888;font-weight:700;">PROBLEMA</div>
+        <div style="font-size:10px;color:#333;margin-top:3px;">${getField('p_problem')||'(sin contenido)'}</div>
+      </div>
+      <div style="background:#f4f4f4;padding:8px;border-radius:4px;text-align:center;">
+        <div style="font-size:9px;color:#888;font-weight:700;">RESULTADO</div>
+        <div style="font-family:Montserrat;font-weight:800;font-size:26px;color:#0066CC;margin-top:2px;">${getField('p_result','37%')}</div>
+        <div style="font-size:9px;color:#666;">${getField('p_result_label','')}</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-top:6px;">
+      <div style="background:#ddd;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:18px;">📷</div>
+      <div style="background:#ddd;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:18px;">📷</div>
+      <div style="background:#ddd;aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:18px;">📷</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:auto;align-items:flex-end;">
+      <div style="background:#2C3E50;width:46px;height:46px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-family:monospace;">QR</div>
+      <div style="flex:1;font-size:9px;color:#333;">
+        <div style="font-weight:700;">${getField('p_team','Equipo')}</div>
+        <div style="color:#888;margin-top:2px;">${getField('p_inst','Institución')}</div>
+      </div>
+    </div>
+  `;
+}
+function openPrintPreview(){
+  const w = window.open('','_blank');
+  const css = `
+    @page{size:A1 portrait;margin:0;}
+    body{margin:0;padding:30mm;font-family:'Open Sans',sans-serif;color:#2C3E50;background:#fff;display:flex;flex-direction:column;gap:20mm;height:100%;box-sizing:border-box;}
+    .t1{font-size:9pt;color:#888;letter-spacing:.18em;text-transform:uppercase;}
+    .title{font-family:'Montserrat',sans-serif;font-weight:900;font-size:96pt;line-height:.95;color:#2C3E50;}
+    .slog{font-size:24pt;color:#2ECC71;font-style:italic;}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:15mm;}
+    .box{background:#f4f4f4;padding:10mm;border-radius:6mm;}
+    .box h3{font-size:11pt;color:#888;margin:0 0 4mm;letter-spacing:.1em;}
+    .box .v{font-size:18pt;color:#333;}
+    .res{text-align:center;}
+    .res .num{font-family:'Montserrat';font-weight:800;font-size:120pt;color:#0066CC;line-height:1;}
+    .imgs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8mm;height:100mm;}
+    .imgs div{background:#ddd;display:flex;align-items:center;justify-content:center;font-size:48pt;color:#aaa;border-radius:4mm;}
+    .foot{display:flex;gap:10mm;align-items:flex-end;}
+    .qr{background:#2C3E50;width:60mm;height:60mm;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14pt;font-family:monospace;}
+  `;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Afiche — ${getField('p_title','Proyecto')}</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&family=Open+Sans:wght@400;700&display=swap"/>
+    <style>${css}</style></head>
+    <body>
+      <div class="t1">Feria de Ciencias 2024</div>
+      <div>
+        <div class="title">${getField('p_title')||getField('nombre','TÍTULO')}</div>
+        <div class="slog">${getField('p_slogan')||getField('eslogan','')}</div>
+      </div>
+      <div class="row">
+        <div class="box"><h3>PROBLEMA</h3><div class="v">${getField('p_problem','')}</div></div>
+        <div class="box res"><h3>RESULTADO</h3><div class="num">${getField('p_result','37%')}</div><div>${getField('p_result_label','')}</div></div>
+      </div>
+      <div class="imgs"><div>📷 foto 1</div><div>📷 foto 2</div><div>📷 foto 3</div></div>
+      <div class="foot"><div class="qr">QR</div>
+        <div style="flex:1;font-size:14pt;"><strong>${getField('p_team','Equipo')}</strong><br><span style="color:#666;">${getField('p_inst','Institución')}</span></div>
+      </div>
+    </body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+/* ============ M 2.2 ============ */
+MOD_BODY['m2.2'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">El stand es donde el visitante <em>experimenta</em> el proyecto. No es solo el afiche colgado — es todo el conjunto.</p>
+
+<!-- Vista cenital del stand -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">STAND IDEAL · vista desde arriba</div>
+  <svg viewBox="0 0 500 320" class="w-full" style="background:#1a1a1a;border-radius:6px;">
+    <!-- Panel vertical -->
+    <rect x="40" y="20" width="420" height="40" fill="#2a1208" stroke="#ff6b35"/>
+    <text x="250" y="45" text-anchor="middle" fill="#ff8855" font-size="12" font-family="monospace">📋 PANEL · afiche A1 + fotos del proceso</text>
+    
+    <!-- Mesa -->
+    <rect x="40" y="120" width="420" height="120" fill="#1a3c2a" stroke="#5fffaa"/>
+    <text x="100" y="145" fill="#5fffaa" font-size="11" font-family="monospace">🌱 Maceta</text>
+    <circle cx="100" cy="180" r="20" fill="none" stroke="#5fffaa"/>
+    <text x="250" y="145" text-anchor="middle" fill="#5fffaa" font-size="11" font-family="monospace">🔧 Arduino + sistema en vivo</text>
+    <rect x="220" y="160" width="60" height="30" fill="none" stroke="#5fffaa"/>
+    <text x="400" y="145" text-anchor="middle" fill="#5fffaa" font-size="11" font-family="monospace">📱 Tablet · video loop</text>
+    <rect x="370" y="155" width="60" height="40" fill="none" stroke="#5fffaa"/>
+    <text x="250" y="225" text-anchor="middle" fill="#888" font-size="10">MESA FRONTAL</text>
+    
+    <!-- Zona interacción -->
+    <rect x="40" y="260" width="200" height="50" fill="#08172a" stroke="#5cc0ff" stroke-dasharray="4 4"/>
+    <text x="140" y="290" text-anchor="middle" fill="#5cc0ff" font-size="11" font-family="monospace">👋 zona del visitante</text>
+    
+    <!-- Cartelitos -->
+    <rect x="260" y="260" width="200" height="50" fill="#1a0d05" stroke="#ff8855" stroke-dasharray="4 4"/>
+    <text x="360" y="290" text-anchor="middle" fill="#ff8855" font-size="11" font-family="monospace">🏷️ cartelitos de componentes</text>
+  </svg>
+</div>
+
+<!-- Materiales -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">MATERIALES PARA EL STAND</div>
+  <p class="text-xs muted mb-4">Marcá lo que ya tenés. Es la lista mínima.</p>
+  ${[
+    ['s-1','Afiche impreso (mínimo A2, ideal A1)','imprenta o ploteo'],
+    ['s-2','Cartelitos de componentes laminados','impresora + plastificadora'],
+    ['s-3','Mantel o tela verde','evoca hidroponia + da prolijidad'],
+    ['s-4','Maceta con el sistema funcionando','protagonista del stand'],
+    ['s-5','Tablet o notebook para el video en loop','prestada o de algún integrante'],
+    ['s-6','Extensión eléctrica y zapatilla','para alimentar todo'],
+    ['s-7','Cartón pluma o display de fondo','si no hay panel vertical'],
+    ['s-8','Cinta doble faz / chinches','para pegar el afiche'],
+  ].map(([id,t,d])=>`
+    <label class="flex items-start gap-3 cursor-pointer py-2 text-sm border-b border-[var(--border)] last:border-b-0">
+      <input type="checkbox" class="mt-1 accent-[var(--com)]" ${getCheck(id)?'checked':''} onchange="setCheck('${id}',this.checked)"/>
+      <div class="flex-1">
+        <div>${t}</div>
+        <div class="text-[11px] muted mt-0.5">${d}</div>
+      </div>
+    </label>
+  `).join('')}
+</div>
+
+<!-- Cartelitos -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">CARTELITOS DE COMPONENTES</div>
+    <button class="btn btn-accent" onclick="printCartelitos()">🖨️ Imprimir cartelitos</button>
+  </div>
+  <p class="text-xs muted mb-4">8 cartelitos prediseñados. Vista previa:</p>
+
+  <div class="grid grid-cols-4 gap-3" id="cartelitos-preview">
+    ${[
+      ['Arduino UNO','El cerebro del sistema','💾'],
+      ['Sensor humedad','Mide cuánta agua hay en la tierra','💧'],
+      ['Módulo relé','Activa la bomba con poca corriente','🔌'],
+      ['Bomba de agua','Empuja el agua hacia la planta','⚙️'],
+      ['Sensor de temp.','Mide la temperatura del ambiente','🌡️'],
+      ['Protoboard','Conecta los cables sin soldar','🔗'],
+      ['Caja de baterías','Alimenta al Arduino sin enchufe','🔋'],
+      ['Sensor Shield','Facilita conectar muchos sensores','🛡️'],
+    ].map(([n,d,e])=>`
+      <div class="panel-2 p-3 text-center">
+        <div style="font-size:24px">${e}</div>
+        <div class="text-xs font-semibold mt-1">${n}</div>
+        <div class="text-[10px] muted mt-1">${d}</div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+
+<!-- Decoración del aula -->
+<div class="panel p-5">
+  <div class="text-xs mono muted mb-3">EN EL AULA, ANTES DE LA FERIA</div>
+  <p class="text-sm muted mb-4">Documentar el proceso es parte del trabajo del team Comunicación. Tres ideas para implementar en el aula:</p>
+  <div class="grid grid-cols-3 gap-3">
+    <div class="panel-2 p-4">
+      <div class="font-semibold text-sm mb-1">📊 Panel de progreso</div>
+      <div class="text-xs muted">Tablero físico (afiche de cartulina) con los Sprints y las historias. Lo ven todos los teams.</div>
+    </div>
+    <div class="panel-2 p-4">
+      <div class="font-semibold text-sm mb-1">📸 Pared del proceso</div>
+      <div class="text-xs muted">Fotos del proyecto en orden cronológico, pegadas a la pared. Cuenta la historia visualmente.</div>
+    </div>
+    <div class="panel-2 p-4">
+      <div class="font-semibold text-sm mb-1">📓 Diario de errores</div>
+      <div class="text-xs muted">Cuaderno o documento donde anotan cada problema y la solución. <span class="com">Es oro para el video</span>.</div>
+    </div>
+  </div>
+</div>
+`;
+function printCartelitos(){
+  const items = [
+    ['Arduino UNO','El cerebro del sistema. Procesa los datos del sensor y decide cuándo activar la bomba.','💾'],
+    ['Sensor de humedad','Mide cuánta agua hay en la tierra de la maceta. Da un número entre 0 y 1023.','💧'],
+    ['Módulo relé','Es un interruptor electrónico. Permite que el Arduino active la bomba que necesita más corriente.','🔌'],
+    ['Bomba de agua','Empuja el agua del tanque hacia la planta. Se activa solo cuando hace falta.','⚙️'],
+    ['Sensor de temperatura','Mide la temperatura del ambiente. Sirve para entender cuándo hace más calor (y la planta toma más agua).','🌡️'],
+    ['Protoboard','Una plaqueta llena de agujeros que permite conectar cables sin soldar. Ideal para prototipar.','🔗'],
+    ['Caja de baterías','Alimenta el sistema con pilas. Sirve para que funcione sin estar enchufado a la pared.','🔋'],
+    ['Sensor Shield','Una placa que se monta sobre el Arduino y facilita conectar muchos sensores al mismo tiempo.','🛡️'],
+  ];
+  const w = window.open('','_blank');
+  const css = `
+    @page{size:A4;margin:8mm;}
+    body{margin:0;font-family:'Open Sans',sans-serif;}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:6mm;}
+    .card{border:2px solid #2C3E50;border-radius:6mm;padding:8mm;height:80mm;display:flex;flex-direction:column;justify-content:space-between;page-break-inside:avoid;}
+    .card .emo{font-size:42pt;text-align:center;}
+    .card .n{font-family:'Montserrat',sans-serif;font-weight:800;font-size:18pt;color:#2C3E50;text-align:center;}
+    .card .d{font-size:10pt;color:#444;text-align:center;}
+    .card .b{border-top:1px dashed #ccc;padding-top:3mm;text-align:center;color:#2ECC71;font-size:8pt;letter-spacing:.1em;text-transform:uppercase;}
+  `;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"/><title>Cartelitos</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&family=Open+Sans&display=swap"/>
+    <style>${css}</style></head><body><div class="grid">
+    ${items.map(([n,d,e])=>`<div class="card"><div class="emo">${e}</div><div><div class="n">${n}</div><div class="d">${d}</div></div><div class="b">${getField('nombre','Proyecto')}</div></div>`).join('')}
+    </div></body></html>`);
+  w.document.close();
+  setTimeout(()=>w.print(),500);
+}
+
+/* ============ M 2.3 ============ */
+const PHOTOS = [
+  ['p-1','El equipo reunido antes de empezar','Plano general, todos mirando a cámara. <em>Para el cierre del video</em>.','👥'],
+  ['p-2','Alguien leyendo el diagrama de conexiones','Primer plano de las manos sobre el papel/pantalla. <em>"Momento idea"</em>.','📄'],
+  ['p-3','Manos conectando un cable al Arduino','Primer plano, fondo limpio. <em>La foto más linda visualmente</em>.','✋'],
+  ['p-4','La primera prueba (funcione o no)','Plano medio del equipo y la pantalla. <em>Las dos son valiosas</em>.','🧪'],
+  ['p-5','El error más grande encontrado','Documentar el problema Y la solución. <em>Para el video, esto engancha</em>.','⚠️'],
+  ['p-6','El sensor midiendo humedad en la tierra','Plano detalle. <em>Para el afiche</em>.','💧'],
+  ['p-7','La bomba activándose por primera vez','Si pueden, en video además de foto. <em>Momento mágico</em>.','💦'],
+  ['p-8','Alguien mirando el gráfico en la pantalla','Plano medio, con el gráfico bien visible. <em>Para mostrar el lado "datos"</em>.','📈'],
+  ['p-9','El equipo completo con el sistema terminado','Foto formal, todos sonriendo. <em>Para el afiche y los créditos</em>.','🎓'],
+  ['p-10','El stand armado el día de la feria','La foto final del proyecto. <em>Para guardar de recuerdo</em>.','🎪'],
+];
+MOD_BODY['m2.3'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Las fotos son la materia prima del afiche y del video. <strong>10 momentos clave</strong> que el team debe documentar a lo largo del proyecto.</p>
+
+<!-- 3 reglas básicas -->
+<div class="grid grid-cols-3 gap-3 mb-8">
+  <div class="panel p-4">
+    <div class="font-semibold text-sm mb-2">📐 Regla de tercios</div>
+    <svg viewBox="0 0 100 70" class="w-full mb-2" style="background:#1a1a1a;border-radius:4px;">
+      <rect x="0" y="0" width="100" height="70" fill="none" stroke="#333"/>
+      <line x1="33" y1="0" x2="33" y2="70" stroke="#ff6b35" stroke-dasharray="2 2"/>
+      <line x1="67" y1="0" x2="67" y2="70" stroke="#ff6b35" stroke-dasharray="2 2"/>
+      <line x1="0" y1="23" x2="100" y2="23" stroke="#ff6b35" stroke-dasharray="2 2"/>
+      <line x1="0" y1="47" x2="100" y2="47" stroke="#ff6b35" stroke-dasharray="2 2"/>
+      <circle cx="33" cy="23" r="6" fill="#00ff88"/>
+    </svg>
+    <div class="text-xs muted">Imaginá la imagen dividida en 9. Poné lo importante en una de las intersecciones, no en el centro.</div>
+  </div>
+  <div class="panel p-4">
+    <div class="font-semibold text-sm mb-2">🧹 Fondo limpio</div>
+    <svg viewBox="0 0 100 70" class="w-full mb-2" style="background:#1a1a1a;border-radius:4px;">
+      <rect x="35" y="20" width="30" height="30" fill="#00ff88"/>
+      <rect x="10" y="60" width="80" height="2" fill="#444"/>
+    </svg>
+    <div class="text-xs muted">Antes de disparar: ¿hay mochilas, vasos o gente atrás? Sacá. <em>Limpiar el fondo es el 80% de una buena foto</em>.</div>
+  </div>
+  <div class="panel p-4">
+    <div class="font-semibold text-sm mb-2">☀️ Luz natural</div>
+    <svg viewBox="0 0 100 70" class="w-full mb-2" style="background:#1a1a1a;border-radius:4px;">
+      <rect x="0" y="0" width="40" height="70" fill="#fff8dc" opacity=".7"/>
+      <text x="20" y="40" fill="#888" font-size="8" text-anchor="middle" font-family="monospace">ventana</text>
+      <circle cx="65" cy="35" r="10" fill="#00ff88"/>
+    </svg>
+    <div class="text-xs muted">Ponete <em>de costado</em> a la ventana, no de espalda. <strong>Nunca uses flash</strong> — queda artificial.</div>
+  </div>
+</div>
+
+<!-- 10 momentos -->
+<div class="text-xs mono muted mb-3">LOS 10 MOMENTOS CLAVE</div>
+<div class="grid grid-cols-2 gap-3">
+${PHOTOS.map(([id,t,d,e])=>{
+  const st = STATE.fields['ph_'+id] || 'pending';
+  return `
+  <div class="panel p-4 photo-card ${st==='taken'?'taken':''} ${st==='selected'?'selected':''}">
+    <div class="flex items-start gap-3">
+      <div style="font-size:28px">${e}</div>
+      <div class="flex-1">
+        <div class="font-semibold text-sm">${t}</div>
+        <div class="text-[11px] muted mt-1">${d}</div>
+        <div class="flex gap-1 mt-3">
+          <button class="btn text-[10px] ${st==='pending'?'btn-accent':''}" onclick="setField('ph_${id}','pending');renderModule(STATE.current);">□ Pendiente</button>
+          <button class="btn text-[10px] ${st==='taken'?'btn-accent':''}" onclick="setField('ph_${id}','taken');renderModule(STATE.current);">📸 Tomada</button>
+          <button class="btn text-[10px] ${st==='selected'?'btn-accent':''}" onclick="setField('ph_${id}','selected');renderModule(STATE.current);">✓ Seleccionada</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}).join('')}
+</div>
+
+<div class="panel p-4 mt-6" style="background:#1a0d05;">
+  <div class="text-sm">📸 <strong>Tip:</strong> tomá <em>varias</em> de cada momento (mínimo 3 ángulos). Después, en frío, elegís la mejor.</div>
+</div>
+`;
+
+/* ============ M 2.4 Quiz ============ */
+const QUIZ_24 = [
+  { q:'¿Cuál de estos es un buen título para el afiche?', opts:[
+    'Sistema Automatizado de Riego Hidropónico con Microcontrolador Arduino UNO y Sensores Capacitivos',
+    'HidroBot · Riega solo cuando hace falta',
+    'Proyecto de feria 2024',
+    'Trabajo final de la materia Tecnología'], correct:1,
+    exp:'Corto, claro, con eslogan. Se lee desde lejos.'},
+  { q:'En la foto del proceso, ¿qué deberías evitar?', opts:[
+    'Sacar fotos en horizontal',
+    'Fondo desordenado con mochilas y vasos',
+    'Pedirle al equipo que sonría',
+    'Tomar varias fotos del mismo momento'], correct:1,
+    exp:'Fondo limpio = foto profesional. Antes de disparar, mirá qué hay atrás.'},
+  { q:'¿Cuál es el tamaño mínimo recomendado para el afiche impreso?', opts:[
+    'A4 (hoja común)','A3','A2','Cualquier tamaño sirve'], correct:2,
+    exp:'A2 mínimo, ideal A1. Más chico no se ve desde lejos.'},
+  { q:'¿Qué información NO debe ir en el afiche?', opts:[
+    'El código Python completo',
+    'Un número/dato del resultado',
+    'Nombres del equipo',
+    'QR al video'], correct:0,
+    exp:'El código en el afiche es ilegible y aburre. Mejor un diagrama simple del flujo.'},
+  { q:'¿Dónde se ubica el QR en el afiche?', opts:[
+    'En el centro, grande, como protagonista',
+    'En una esquina, mínimo 4×4 cm, con texto al lado',
+    'En el reverso del afiche',
+    'No es necesario, alcanza con el link'], correct:1,
+    exp:'Esquina visible, tamaño mínimo 4×4cm, con texto "Escaneá para ver el video".'},
+];
+MOD_BODY['m2.4'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">5 preguntas sobre diseño de afiches y comunicación visual.</p>
+
+<div id="quiz-24">
+  ${QUIZ_24.map((qq,i)=>`
+    <div class="panel p-5 mb-4" data-qidx="${i}">
+      <div class="flex items-center gap-2 mb-3"><span class="chip mono">Pregunta ${i+1}</span></div>
+      <div class="mb-3 text-sm">${qq.q}</div>
+      <div class="space-y-2">
+        ${qq.opts.map((o,j)=>`
+          <div class="quiz-opt" data-opt="${j}" onclick="answerQuiz('q24',${i},${j})">
+            <span class="mono muted">${'abcd'[j]})</span>
+            <span>${o}</span>
+          </div>`).join('')}
+      </div>
+      <div class="explain mt-3 text-xs muted hidden">${qq.exp}</div>
+    </div>
+  `).join('')}
+</div>
+
+<div class="panel p-5" style="background:#1a0d05;border-color:#553318;">
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="text-xs muted">Puntaje</div>
+      <div class="mono text-3xl com" id="score-24">0 / 5</div>
+    </div>
+    <button class="btn" onclick="reviewQuiz('q24')">Reiniciar</button>
+  </div>
+</div>
+`;
+function answerQuiz(quizId, qi, oj){
+  STATE.quiz[quizId] = STATE.quiz[quizId] || {};
+  if(STATE.quiz[quizId][qi] !== undefined) return;
+  const QQ = quizId==='q24' ? QUIZ_24 : QUIZ_FINAL;
+  const correct = QQ[qi].correct;
+  STATE.quiz[quizId][qi] = oj;
+  saveState();
+  const panel = document.querySelector(`[data-qidx="${qi}"]`);
+  panel.querySelectorAll('.quiz-opt').forEach((el,idx)=>{
+    el.classList.add('disabled');
+    if(idx===correct) el.classList.add('correct');
+    if(idx===oj && idx!==correct) el.classList.add('wrong');
+  });
+  panel.querySelector('.explain').classList.remove('hidden');
+  const score = Object.entries(STATE.quiz[quizId]).filter(([k,v])=> v===QQ[k].correct).length;
+  const elScore = document.getElementById(quizId==='q24'?'score-24':'score-final');
+  if(elScore) elScore.textContent = score+' / '+QQ.length;
+}
+function reviewQuiz(quizId){ STATE.quiz[quizId]={}; saveState(); renderModule(STATE.current); }
+
+/* ============ M 3.1 ============ */
+MOD_BODY['m3.1'] = (m) => {
+  const def = [
+    ['Acto 1 · Problema','30s','Planta marchita / mano olvidando regar','Voz en off: "¿Te pasó alguna vez...?"'],
+    ['Acto 2 · La idea','30s','Equipo hablando, primer bosquejo','"Pensamos en hacer un sistema que..."'],
+    ['Acto 3 · Construcción','2 min','Time-lapse del armado + error grande','Música, casi sin voz. El error + solución en cartel.'],
+    ['Acto 4 · Resultado','1 min','Sistema en vivo, gráfico en pantalla, bomba activándose','Voz: "Y así llegamos a..."'],
+    ['Acto 5 · Cierre','30s','Equipo completo, próximos pasos','"Aprendimos que..." + créditos'],
+  ];
+  return `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Un video de 3-5 minutos parece corto pero <strong>guionarlo antes ahorra HORAS</strong> de filmación y edición. La estructura clásica en 5 actos:</p>
+
+<!-- 5 actos visuales -->
+<div class="panel p-5 mb-6">
+  <div class="grid grid-cols-5 gap-2 mb-4">
+    ${['Problema','Idea','Construcción','Resultado','Cierre'].map((s,i)=>`
+      <div class="text-center">
+        <div class="rounded p-3 mb-2" style="background:${['#1a0d05','#0d1a05','#05140a','#0a0d1a','#1a050d'][i]};border:1px solid ${['#553318','#335518','#185533','#181a55','#551833'][i]};">
+          <div class="text-xs com font-semibold">Acto ${i+1}</div>
+          <div class="text-[10px] muted mt-1">${['30s','30s','2 min','1 min','30s'][i]}</div>
+        </div>
+        <div class="text-[11px]">${s}</div>
+      </div>
+    `).join('')}
+  </div>
+  <div class="text-[11px] muted text-center">Total ≈ 4:30 min · El sweet spot para ferias escolares.</div>
+</div>
+
+<!-- Plantilla editable -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">GUIÓN EDITABLE</div>
+    <button class="btn btn-accent" onclick="copyScript()">📋 Copiar guión completo</button>
+  </div>
+  <table class="script">
+    <thead><tr><th>Escena</th><th>Duración</th><th>Qué se filma</th><th>Qué se dice / texto</th></tr></thead>
+    <tbody id="script-rows">
+      ${def.map((row,i)=>`
+        <tr>
+          <td><strong>${row[0]}</strong></td>
+          <td>${row[1]}</td>
+          <td><textarea oninput="setField('sc_${i}_film',this.value)">${getField('sc_'+i+'_film',row[2])}</textarea></td>
+          <td><textarea oninput="setField('sc_${i}_say',this.value)">${getField('sc_'+i+'_say',row[3])}</textarea></td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel p-4" style="background:#1a0d05;">
+  <div class="text-sm">💡 <strong class="com">Lo más importante:</strong> incluyan el momento del <strong>error grande</strong> en el Acto 3. Mostrar que algo falló y cómo lo arreglaron <em>engancha más</em> que mostrar un proyecto perfecto.</div>
+</div>
+`;
+};
+function copyScript(){
+  const def = [
+    ['Acto 1 · Problema','30s'],
+    ['Acto 2 · La idea','30s'],
+    ['Acto 3 · Construcción','2 min'],
+    ['Acto 4 · Resultado','1 min'],
+    ['Acto 5 · Cierre','30s'],
+  ];
+  let t = `GUIÓN DEL VIDEO — ${getField('nombre','Proyecto')}\n${'═'.repeat(50)}\n\n`;
+  def.forEach((row,i)=>{
+    t += `${row[0]} (${row[1]})\n`;
+    t += `  📷 Qué se filma:\n     ${getField('sc_'+i+'_film','(vacío)')}\n`;
+    t += `  🎤 Qué se dice:\n     ${getField('sc_'+i+'_say','(vacío)')}\n\n`;
+  });
+  copyText(t);
+}
+
+/* ============ M 3.2 ============ */
+MOD_BODY['m3.2'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">No necesitan cámara profesional — un celular es suficiente. Pero hay <strong>5 reglas de oro</strong> que separan un video amateur de uno profesional.</p>
+
+${[
+  {n:1, t:'Siempre horizontal',
+    d:'El stand tiene pantalla horizontal y YouTube también. <span class="com">Rotá el celular antes de filmar</span>.',
+    svg:`<rect x="20" y="10" width="20" height="44" rx="3" fill="none" stroke="#ff7788" stroke-width="2"/><text x="30" y="38" text-anchor="middle" fill="#ff7788" font-size="14">✗</text>
+         <rect x="55" y="20" width="44" height="24" rx="3" fill="none" stroke="#5fffaa" stroke-width="2"/><text x="77" y="36" text-anchor="middle" fill="#5fffaa" font-size="14">✓</text>`},
+  {n:2, t:'Estabilización',
+    d:'Apoyá el codo en una mesa, agarrá con las dos manos o usá un trípode improvisado (libros). <span class="com">Video tembloroso = video difícil de ver</span>.',
+    svg:`<rect x="20" y="20" width="60" height="34" rx="3" fill="#5fffaa" opacity=".15"/>
+         <path d="M50 24 L 50 50" stroke="#5fffaa" stroke-width="2"/>
+         <text x="50" y="65" text-anchor="middle" fill="#888" font-size="9">2 manos</text>`},
+  {n:3, t:'Planos variados',
+    d:'No filmes 5 minutos del mismo ángulo. Combiná: <strong>general, medio, primer plano, detalle</strong>. Te lo explicamos abajo.'},
+  {n:4, t:'El audio importa tanto como la imagen',
+    d:'Hablá <em>cerca</em> del micrófono. Si grabás afuera, lejos de gente. <strong>Tip pro:</strong> auriculares con micrófono = micrófono externo gratis.',
+    svg:`<circle cx="35" cy="32" r="14" fill="none" stroke="#5fffaa" stroke-width="2"/><text x="35" y="36" text-anchor="middle" fill="#5fffaa" font-size="14">🎙</text>
+         <circle cx="75" cy="32" r="14" fill="none" stroke="#ff7788" stroke-width="2"/><text x="75" y="36" text-anchor="middle" fill="#ff7788" font-size="14">🔊</text>`},
+  {n:5, t:'Grabá de más, editá después',
+    d:'<strong>Siempre 3 segundos antes y 3 segundos después</strong> de la acción. Después en la edición los recortás. Si no los grabaste, no hay vuelta atrás.'},
+].map(r=>`
+  <div class="panel p-5 mb-4">
+    <div class="flex items-start gap-4">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center mono com" style="background:#1a0d05;border:1px solid var(--com);font-size:14px;">${r.n}</div>
+      <div class="flex-1">
+        <div class="font-semibold mb-2">${r.t}</div>
+        <div class="text-sm muted">${r.d}</div>
+        ${r.svg?`<svg viewBox="0 0 100 70" class="mt-3" style="height:70px;background:#1a1a1a;border-radius:4px;">${r.svg}</svg>`:''}
+      </div>
+    </div>
+  </div>
+`).join('')}
+
+<!-- Planos variados -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">LOS 4 TIPOS DE PLANO</div>
+  <div class="grid grid-cols-2 gap-3">
+    ${[
+      ['Plano general','Todo el stand o todo el equipo. <em>Sirve para el inicio del video</em>.',
+        `<rect x="10" y="10" width="80" height="50" fill="none" stroke="#5fffaa"/><circle cx="30" cy="35" r="4" fill="#5fffaa"/><circle cx="50" cy="35" r="4" fill="#5fffaa"/><circle cx="70" cy="35" r="4" fill="#5fffaa"/>`],
+      ['Plano medio','Una persona de la cintura para arriba, explicando algo. <em>El más usado</em>.',
+        `<rect x="35" y="10" width="30" height="50" fill="#5fffaa" opacity=".3"/><circle cx="50" cy="25" r="8" fill="#5fffaa"/>`],
+      ['Primer plano','Manos haciendo algo (conectar, escribir). <em>Crea intimidad y muestra trabajo</em>.',
+        `<rect x="20" y="30" width="60" height="30" fill="#5fffaa" opacity=".3"/><path d="M30 50 L 70 50" stroke="#5fffaa" stroke-width="3"/>`],
+      ['Detalle','El sensor, la pantalla, una gota de agua cayendo. <em>Para B-roll</em>.',
+        `<circle cx="50" cy="35" r="20" fill="none" stroke="#5fffaa" stroke-width="2"/><circle cx="50" cy="35" r="6" fill="#5fffaa"/>`],
+    ].map(([t,d,svg])=>`
+      <div class="panel-2 p-3">
+        <svg viewBox="0 0 100 70" class="w-full mb-2" style="background:#1a1a1a;border-radius:4px;">${svg}</svg>
+        <div class="text-xs font-semibold">${t}</div>
+        <div class="text-[10px] muted mt-1">${d}</div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+
+<!-- Checklist filmación -->
+<div class="panel p-5">
+  <div class="text-xs mono muted mb-3">CHECKLIST · ANTES DE EMPEZAR A FILMAR</div>
+  ${[
+    ['f-1','Batería del celular cargada al 100%'],
+    ['f-2','Espacio de almacenamiento verificado (mínimo 2 GB libres)'],
+    ['f-3','Modo avión activado (sin notificaciones)'],
+    ['f-4','Brillo manual al máximo (no automático — cambia solo durante la toma)'],
+    ['f-5','Guión impreso o en otro celular para referencia'],
+    ['f-6','Limpiar la lente del celular con un trapito (¡siempre está sucia!)'],
+  ].map(([id,t])=>`
+    <label class="flex items-start gap-3 cursor-pointer py-1.5 text-sm">
+      <input type="checkbox" class="mt-1 accent-[var(--com)]" ${getCheck(id)?'checked':''} onchange="setCheck('${id}',this.checked)"/>
+      <span>${t}</span>
+    </label>
+  `).join('')}
+</div>
+`;
+
+/* ============ M 3.3 ============ */
+MOD_BODY['m3.3'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">CapCut es <strong>gratuito, está en español y corre en celular y PC</strong>. Es lo más accesible para empezar a editar.</p>
+
+<!-- Comparativa -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">¿POR QUÉ CAPCUT?</div>
+  <table class="script">
+    <thead><tr><th></th><th>iMovie</th><th class="com">CapCut</th><th>DaVinci Resolve</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Gratis</strong></td><td>✓ (solo Mac)</td><td class="com">✓</td><td>✓</td></tr>
+      <tr><td><strong>En español</strong></td><td>✓</td><td class="com">✓</td><td>✓</td></tr>
+      <tr><td><strong>En celular</strong></td><td>✓ iPhone</td><td class="com">✓ Android + iPhone</td><td>✗</td></tr>
+      <tr><td><strong>Subtítulos automáticos</strong></td><td>✗</td><td class="com">✓</td><td>complicado</td></tr>
+      <tr><td><strong>Música sin copyright incluida</strong></td><td>✗</td><td class="com">✓</td><td>✗</td></tr>
+      <tr><td><strong>Curva de aprendizaje</strong></td><td>fácil</td><td class="com">muy fácil</td><td>compleja</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Pasos -->
+<div class="text-xs mono muted mb-3">TUTORIAL · 8 PASOS</div>
+${[
+  ['Crear nuevo proyecto e importar clips','Tocá <strong>"+ Nuevo proyecto"</strong>, después <strong>"Importar"</strong>. Seleccioná todos los videos del celular o de la galería compartida.','📁'],
+  ['Ordenar los clips según el guión','Arrastrá los clips a la timeline en el orden de los 5 actos del Módulo 3.1.','🔀'],
+  ['Cortar inicio y fin de cada clip (trim)','Click en el clip → arrastrá los bordes para acortar. Los 3 segundos "de más" que grabaste sirven para hacer este trim.','✂️'],
+  ['Agregar transiciones suaves','Entre cada par de clips, agregá una transición <em>Fade</em> (0.3 a 0.5 seg). <span class="com">No abuses</span> — máximo 1 cada 4 cortes.','🔀'],
+  ['Música de fondo (sin copyright)','Botón <strong>Audio → Música → CapCut</strong>. Filtrá por "Inspiracional" o "Ambient". Bajá el volumen al 30% cuando hay voz.','🎵'],
+  ['Títulos del proyecto y nombres del equipo','Botón <strong>Texto → Agregar texto</strong>. Título al inicio, créditos al final con los nombres del equipo + institución.','✏️'],
+  ['Subtítulos automáticos','Botón <strong>Texto → Subtítulos automáticos</strong>. CapCut transcribe la voz solo. Después revisás y corregís errores. <span class="com">Accesibilidad = profesionalismo</span>.','💬'],
+  ['Exportar en 1080p','Botón <strong>Exportar (flecha arriba)</strong> → <strong>1080p, 30 fps, calidad alta</strong>. Tarda 3-5 minutos.','⬆️'],
+].map((s,i)=>`
+  <details class="panel mb-2" ${i===0?'open':''}>
+    <summary class="p-4 flex items-center gap-3">
+      <span class="accordion-arrow com">›</span>
+      <div class="w-8 h-8 rounded-full flex items-center justify-center mono com" style="background:#1a0d05;border:1px solid var(--com);font-size:12px;">${i+1}</div>
+      <div class="flex-1 font-medium text-sm">${s[0]}</div>
+      <span style="font-size:20px">${s[2]}</span>
+    </summary>
+    <div class="px-5 pb-4 pt-1 text-sm muted">${s[1]}</div>
+  </details>
+`).join('')}
+
+<!-- Timeline visual -->
+<div class="panel p-5 mt-6 mb-6">
+  <div class="text-xs mono muted mb-3">TIMELINE RECOMENDADA</div>
+  <div class="rounded overflow-hidden" style="height:50px;display:flex;">
+    ${[
+      ['#1a0d05','Tit','5s'],
+      ['#1a0d05','Acto 1 · Problema','30s'],
+      ['#0d1a05','Acto 2 · Idea','30s'],
+      ['#05140a','Acto 3 · Construcción','120s'],
+      ['#0a0d1a','Acto 4 · Resultado','60s'],
+      ['#1a050d','Cierre + créditos','30s'],
+    ].map(([c,t,d])=>`
+      <div style="background:${c};flex:${parseInt(d)};display:flex;align-items:center;justify-content:center;font-size:10px;color:#aaa;border-right:1px solid #0a0a0a;flex-direction:column;">
+        <div>${t}</div>
+        <div class="muted">${d}</div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+
+<!-- Música -->
+<div class="panel p-5">
+  <div class="text-xs mono muted mb-3">DÓNDE BUSCAR MÚSICA SIN COPYRIGHT</div>
+  <div class="grid grid-cols-2 gap-3 text-sm">
+    <div class="panel-2 p-3"><strong class="com">YouTube Audio Library</strong><div class="text-[11px] muted mt-1">studio.youtube.com → Biblioteca de audio. Gratis, sin marca de agua.</div></div>
+    <div class="panel-2 p-3"><strong class="com">Pixabay Music</strong><div class="text-[11px] muted mt-1">pixabay.com/music. Filtrar por "Inspirational" o "Ambient".</div></div>
+    <div class="panel-2 p-3"><strong class="com">ccMixter</strong><div class="text-[11px] muted mt-1">ccmixter.org. Música con licencia Creative Commons.</div></div>
+    <div class="panel-2 p-3"><strong class="com">Free Music Archive</strong><div class="text-[11px] muted mt-1">freemusicarchive.org. Biblioteca enorme, ordenada por género.</div></div>
+  </div>
+  <p class="text-[11px] muted mt-3">⚠ Si usás música de Spotify o de un artista famoso, YouTube te baja el video o le pone publicidad. Siempre verificá que diga "<strong>no copyright</strong>" o "<strong>royalty free</strong>".</p>
+</div>
+`;
+
+/* ============ M 3.4 QR generator ============ */
+MOD_BODY['m3.4'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">El <strong>QR</strong> es la forma más rápida de conectar el afiche con el video. El visitante escanea con el celular y se le abre YouTube directo.</p>
+
+<!-- Pasos -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">CÓMO FUNCIONA</div>
+  ${[
+    ['Subí el video a YouTube','Modo <strong>"No listado"</strong> (Unlisted) — solo lo ve quien tenga el link. No aparece en búsquedas.','📤'],
+    ['Copiá la URL del video','Del estilo <span class="mono accent">youtu.be/XYZabc123</span>. Esa es la que va al QR.','🔗'],
+    ['Generá el QR acá abajo','Pegá la URL → se dibuja el QR al instante.','📐'],
+    ['Probá el QR','Escanealo con TU celular antes de imprimirlo. <strong>Probalo en 3 celulares distintos</strong>.','📱'],
+    ['Imprimí y pegá en el afiche','Mínimo 4×4 cm. Con un texto al lado: <em>"Escaneá para ver el video"</em>.','🖨️'],
+  ].map((s,i)=>`
+    <div class="flex items-start gap-4 py-3 ${i<4?'border-b border-[var(--border)]':''}">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center mono com flex-shrink-0" style="background:#1a0d05;border:1px solid var(--com);font-size:12px;">${i+1}</div>
+      <div class="flex-1">
+        <div class="font-medium text-sm mb-1">${s[0]}</div>
+        <div class="text-xs muted">${s[1]}</div>
+      </div>
+      <span style="font-size:24px">${s[2]}</span>
+    </div>
+  `).join('')}
+</div>
+
+<!-- Generador -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-3">GENERADOR DE QR</div>
+  <label class="text-xs muted">Pegá la URL del video</label>
+  <input id="qr-url" type="text" value="${getField('qr_url','https://youtu.be/dQw4w9WgXcQ')}"
+    oninput="setField('qr_url',this.value);genQR();"
+    class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-3 mt-1 mb-4 mono text-sm" placeholder="https://youtu.be/..."/>
+
+  <div class="grid grid-cols-2 gap-6 items-center">
+    <div>
+      <div id="qr-out" class="bg-white p-4 rounded mx-auto" style="width:240px;height:240px;"></div>
+    </div>
+    <div class="space-y-2">
+      <button class="btn btn-accent w-full justify-center" onclick="testQR()">🌐 Probar el link</button>
+      <button class="btn w-full justify-center" onclick="downloadQR()">⬇️ Descargar QR como PNG</button>
+      <div class="text-[11px] muted mt-3">💡 El PNG generado tiene 240×240 px. Para impresión, llevalo a una imprenta — escala bien.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Checklist -->
+<div class="panel p-5">
+  <div class="text-xs mono muted mb-3">CHECKLIST DEL QR</div>
+  ${[
+    ['qr-1','El video está en YouTube (al menos modo "no listado")'],
+    ['qr-2','El QR se probó con 3 celulares distintos'],
+    ['qr-3','El QR está impreso en el afiche en tamaño mínimo 4×4 cm'],
+    ['qr-4','Al lado del QR hay un texto: "Escaneá para ver el video del proceso"'],
+  ].map(([id,t])=>`
+    <label class="flex items-start gap-3 cursor-pointer py-1.5 text-sm">
+      <input type="checkbox" class="mt-1 accent-[var(--com)]" ${getCheck(id)?'checked':''} onchange="setCheck('${id}',this.checked)"/>
+      <span>${t}</span>
+    </label>
+  `).join('')}
+</div>
+`;
+MOD_AFTER['m3.4'] = () => { genQR(); };
+function genQR(){
+  const url = document.getElementById('qr-url')?.value || '';
+  const out = document.getElementById('qr-out');
+  if(!out) return;
+  out.innerHTML = '';
+  if(!url.trim()){ out.innerHTML='<div class="text-xs muted p-6 text-center">Pegá una URL</div>'; return; }
+  try{
+    new QRCode(out, { text:url, width:208, height:208, colorDark:'#000', colorLight:'#fff', correctLevel: QRCode.CorrectLevel.H });
+  }catch(e){ console.log(e); }
+}
+function testQR(){
+  const url = document.getElementById('qr-url')?.value;
+  if(url) window.open(url,'_blank');
+}
+function downloadQR(){
+  const img = document.querySelector('#qr-out img') || document.querySelector('#qr-out canvas');
+  if(!img){ toast('No se pudo descargar el QR'); return; }
+  const a = document.createElement('a');
+  a.href = img.src || img.toDataURL('image/png');
+  a.download = 'qr-video.png';
+  a.click();
+}
+
+/* ============ M 3.5 Ensayo ============ */
+MOD_BODY['m3.5'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">El día de la feria todo va más rápido de lo que pensás. Si lo ensayás antes, el jurado ve un equipo confiado, no improvisando.</p>
+
+<!-- Tipos de visitante -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">LOS 5 TIPOS DE VISITANTE</div>
+  <p class="text-xs muted mb-4">A cada uno se le habla distinto. Click para ver la estrategia.</p>
+  <div class="grid grid-cols-5 gap-2" id="visitor-tabs">
+    ${[
+      ['👨‍🏫','Jurado','técnico'],
+      ['👔','Director','impacto'],
+      ['🎒','Alumno chico','básico'],
+      ['👨‍👩','Padre','curioso'],
+      ['👥','Colega','interesado'],
+    ].map((v,i)=>`
+      <button class="panel-2 p-3 text-center vt" data-v="${i}" onclick="setVisitor(${i})">
+        <div style="font-size:24px">${v[0]}</div>
+        <div class="text-[11px] mt-1 font-semibold">${v[1]}</div>
+        <div class="text-[9px] muted">${v[2]}</div>
+      </button>
+    `).join('')}
+  </div>
+  <div id="visitor-info" class="panel-2 p-4 mt-4 text-sm muted">👆 Elegí un tipo de visitante.</div>
+</div>
+
+<!-- Guión presentación -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">GUIÓN DE PRESENTACIÓN ORAL · 2 MINUTOS</div>
+    <button class="btn btn-accent" onclick="startTimer()">▶ Iniciar cronómetro</button>
+  </div>
+
+  <div class="space-y-3 mb-4">
+    <div class="text-sm leading-relaxed panel-2 p-4" style="line-height:2;">
+      "Bienvenidos a
+      <input class="mono inline-block px-2 mx-1" style="background:#1a0d05;border:1px solid #553318;border-radius:4px;width:160px;color:#ff8855;"
+        value="${getField('pres_name', getField('nombre','HidroBot'))}" oninput="setField('pres_name',this.value)"/>.
+      Nosotros resolvimos el problema de
+      <input class="mono inline-block px-2 mx-1" style="background:#1a0d05;border:1px solid #553318;border-radius:4px;width:220px;color:#ff8855;"
+        value="${getField('pres_problem','el riego manual')}" oninput="setField('pres_problem',this.value)"/>
+      mediante
+      <input class="mono inline-block px-2 mx-1" style="background:#1a0d05;border:1px solid #553318;border-radius:4px;width:220px;color:#ff8855;"
+        value="${getField('pres_solution','un sensor de humedad + Arduino')}" oninput="setField('pres_solution',this.value)"/>.
+
+      Lo más difícil fue
+      <input class="mono inline-block px-2 mx-1" style="background:#1a0d05;border:1px solid #553318;border-radius:4px;width:240px;color:#ff8855;"
+        value="${getField('pres_hard','calibrar el sensor')}" oninput="setField('pres_hard',this.value)"/>,
+      y lo solucionamos
+      <input class="mono inline-block px-2 mx-1" style="background:#1a0d05;border:1px solid #553318;border-radius:4px;width:240px;color:#ff8855;"
+        value="${getField('pres_fix','probando varios umbrales')}" oninput="setField('pres_fix',this.value)"/>.
+
+      Los resultados fueron
+      <input class="mono inline-block px-2 mx-1" style="background:#1a0d05;border:1px solid #553318;border-radius:4px;width:240px;color:#ff8855;"
+        value="${getField('pres_result','un riego 37% más eficiente')}" oninput="setField('pres_result',this.value)"/>.
+      ¿Tienen alguna pregunta?"
+    </div>
+  </div>
+
+  <!-- Cronómetro -->
+  <div class="panel-2 p-6 text-center" id="timer-panel" style="display:none;">
+    <div class="timer-big com" id="timer-display">2:00</div>
+    <div class="text-xs muted mt-2" id="timer-status">Presioná Espacio o el botón para pausar</div>
+    <div class="flex gap-2 justify-center mt-4">
+      <button class="btn" onclick="pauseTimer()">⏸ Pausar</button>
+      <button class="btn" onclick="resetTimer()">↺ Reiniciar</button>
+      <button class="btn btn-ghost" onclick="closeTimer()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Checklist día de feria -->
+<div class="panel p-6" style="background:#1a0d05;border-color:#553318;">
+  <div class="flex items-center gap-2 mb-2">
+    <span style="font-size:22px">🎪</span>
+    <div class="font-semibold text-lg com">Checklist · el día de la feria</div>
+  </div>
+  <p class="text-xs muted mb-4">Imprimila o tenela a mano en el celular. Es la más importante.</p>
+  ${[
+    ['d-1','El Arduino está cargado y conectado a la batería'],
+    ['d-2','El video está corriendo en loop en la tablet'],
+    ['d-3','El afiche está colgado y visible desde la entrada'],
+    ['d-4','Los cartelitos de componentes están pegados'],
+    ['d-5','Cada integrante sabe qué parte del sistema explica'],
+    ['d-6','El sistema fue probado 1 hora antes de abrir la feria'],
+    ['d-7','Hay una persona siempre en el stand (nunca vacío)'],
+  ].map(([id,t])=>`
+    <label class="flex items-start gap-3 cursor-pointer py-1.5 text-sm">
+      <input type="checkbox" class="mt-1 accent-[var(--com)]" ${getCheck(id)?'checked':''} onchange="setCheck('${id}',this.checked)"/>
+      <span>${t}</span>
+    </label>
+  `).join('')}
+</div>
+`;
+const VISITORS = [
+  ['👨‍🏫','Jurado técnico','Quieren detalles del funcionamiento. <strong>Estrategia:</strong> mostrarles el código, el gráfico de datos, el umbral del sensor. No simplifiques de más — quieren ver que entendieron lo que hicieron.'],
+  ['👔','Director / rector','Pregunta el <em>impacto</em> y el aprendizaje. <strong>Estrategia:</strong> qué problema resuelve, qué aprendió el equipo, próximos pasos. Lenguaje no-técnico.'],
+  ['🎒','Alumno de otro grado','Pregunta cosas básicas. <strong>Estrategia:</strong> mostrale el sensor activando la bomba en vivo — es lo más mágico. Sin tecnicismos.'],
+  ['👨‍👩','Padre o familiar','No sabe nada de Arduino. <strong>Estrategia:</strong> empezá por el problema cotidiano ("¿alguna vez se te murió una planta porque te olvidaste de regarla?"). Después mostrás el sistema.'],
+  ['👥','Colega interesado','Quiere hacer algo similar. <strong>Estrategia:</strong> compartile el link del repositorio o el video, contale qué te trabó más para que no se cabree.'],
+];
+function setVisitor(i){
+  document.querySelectorAll('.vt').forEach(b=>b.style.borderColor='var(--border)');
+  document.querySelector(`.vt[data-v="${i}"]`).style.borderColor='var(--com)';
+  const v = VISITORS[i];
+  document.getElementById('visitor-info').innerHTML = `<div class="text-xl mb-2">${v[0]} <span class="com font-semibold">${v[1]}</span></div><div>${v[2]}</div>`;
+}
+let TIMER_INTERVAL=null, TIMER_SEC=120, TIMER_PAUSED=false;
+function startTimer(){
+  document.getElementById('timer-panel').style.display='block';
+  resetTimer(); TIMER_PAUSED=false;
+  TIMER_INTERVAL = setInterval(tickTimer, 1000);
+}
+function tickTimer(){
+  if(TIMER_PAUSED) return;
+  TIMER_SEC--;
+  const m = Math.floor(TIMER_SEC/60), s = TIMER_SEC%60;
+  const d = document.getElementById('timer-display');
+  if(!d){clearInterval(TIMER_INTERVAL);return;}
+  d.textContent = m+':'+String(s).padStart(2,'0');
+  if(TIMER_SEC===30) toast('⏰ Quedan 30 segundos');
+  if(TIMER_SEC<=10) d.style.color='var(--red)';
+  else if(TIMER_SEC<=30) d.style.color='var(--yellow)';
+  else d.style.color='var(--com)';
+  if(TIMER_SEC<=0){ clearInterval(TIMER_INTERVAL); document.getElementById('timer-status').textContent='¡Tiempo!'; toast('⏰ ¡Se acabó el tiempo!'); }
+}
+function pauseTimer(){ TIMER_PAUSED=!TIMER_PAUSED; document.getElementById('timer-status').textContent = TIMER_PAUSED?'Pausado':'Corriendo...'; }
+function resetTimer(){ TIMER_SEC=120; const d=document.getElementById('timer-display'); if(d){d.textContent='2:00'; d.style.color='var(--com)';} }
+function closeTimer(){ clearInterval(TIMER_INTERVAL); document.getElementById('timer-panel').style.display='none'; }
+
+/* ============ M 3.6 Final ============ */
+const QUIZ_FINAL = [
+  { q:'¿Cuál es la duración recomendada para el video del proceso?', opts:['1 minuto','3-5 minutos','10-15 minutos','30 minutos'], correct:1,
+    exp:'3-5 min es el sweet spot: alcanza para contar la historia sin aburrir.'},
+  { q:'¿Cuál de estos NO es un buen plano para el video?', opts:['Plano general del stand','Primer plano de las manos conectando','Plano fijo de 3 minutos de la pantalla','Plano detalle del sensor'], correct:2,
+    exp:'3 min del mismo ángulo aburre. Variá entre general, medio, primer plano y detalle.'},
+  { q:'Subiste el video a YouTube. ¿Qué modo elegís?', opts:['Público','No listado (unlisted)','Privado','Solo para suscriptores'], correct:1,
+    exp:'"No listado" = no aparece en búsquedas pero quien tenga el link lo ve. Ideal para QR de feria.'},
+  { q:'¿Qué orden tienen los actos del video?', opts:['Resultado → Problema → Cierre','Problema → Idea → Construcción → Resultado → Cierre','Equipo → Stand → Datos','Solo importa que se entienda'], correct:1,
+    exp:'Arco narrativo clásico: enganchar con el problema, mostrar la idea, el proceso, el resultado, cerrar.'},
+  { q:'¿Por qué incluir el error más grande en el video?', opts:['Para que el jurado se ría','Porque mostrar problemas + soluciones engancha y demuestra aprendizaje','Para que dure más','No hay que incluirlo'], correct:1,
+    exp:'Mostrar el problema y cómo lo resolvieron es lo que muestra el aprendizaje real.'},
+  { q:'¿Cuál es el tamaño mínimo del QR en el afiche?', opts:['1×1 cm','4×4 cm','10×10 cm','Cualquiera'], correct:1,
+    exp:'4×4 cm mínimo. Menos = los celulares no lo leen bien.'},
+];
+const DELIVERABLES = [
+  ['del-1','Afiche impreso (mínimo A2)'],
+  ['del-2','Cartelitos de componentes impresos y recortados'],
+  ['del-3','Video del proceso editado (3-5 min, 1080p)'],
+  ['del-4','Video subido a YouTube (modo no listado)'],
+  ['del-5','QR generado e impreso en el afiche'],
+  ['del-6','Guión de presentación oral (2 min) ensayado'],
+  ['del-7','Fotos del proceso (mínimo 8 de los 10 momentos)'],
+  ['del-8','Stand armado y probado antes de la feria'],
+];
+MOD_BODY['m3.6'] = (m) => `
+${moduleHeader(m)}
+
+<!-- Autoeval -->
+<div class="text-xs mono muted mb-3">AUTOEVALUACIÓN FINAL · 6 preguntas</div>
+<div id="quiz-final">
+  ${QUIZ_FINAL.map((qq,i)=>`
+    <div class="panel p-5 mb-4" data-qidx="${i}">
+      <div class="flex items-center gap-2 mb-3"><span class="chip mono">Pregunta ${i+1}</span></div>
+      <div class="mb-3 text-sm">${qq.q}</div>
+      <div class="space-y-2">
+        ${qq.opts.map((o,j)=>`
+          <div class="quiz-opt" data-opt="${j}" onclick="answerQuiz('qfinal',${i},${j})">
+            <span class="mono muted">${'abcd'[j]})</span>
+            <span>${o}</span>
+          </div>`).join('')}
+      </div>
+      <div class="explain mt-3 text-xs muted hidden">${qq.exp}</div>
+    </div>
+  `).join('')}
+</div>
+<div class="panel p-5 mb-10" style="background:#1a0d05;border-color:#553318;">
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="text-xs muted">Puntaje final</div>
+      <div class="mono text-3xl com" id="score-final">0 / 6</div>
+    </div>
+    <button class="btn" onclick="reviewQuiz('qfinal')">Reiniciar</button>
+  </div>
+</div>
+
+<!-- Entregables -->
+<div class="panel p-6 mb-6" style="background:linear-gradient(135deg,#1a0d05,#0a0a0a);border-color:var(--com);">
+  <div class="flex items-center gap-2 mb-3">
+    <span style="font-size:22px">📦</span>
+    <h2 class="text-xl font-semibold com">Entregables del Team Comunicación</h2>
+  </div>
+
+  ${(()=>{
+    const done = DELIVERABLES.filter(([id])=>getCheck(id)).length;
+    const pct = Math.round(done/DELIVERABLES.length*100);
+    return `
+    <div class="mb-4">
+      <div class="flex justify-between text-xs mb-2">
+        <span class="muted">Progreso de entregables</span>
+        <span class="com mono">${done} / ${DELIVERABLES.length} (${pct}%)</span>
+      </div>
+      <div class="progress-bar"><div style="width:${pct}%"></div></div>
+    </div>`;
+  })()}
+
+  <div class="space-y-2 mt-4">
+    ${DELIVERABLES.map(([id,t])=>`
+      <label class="flex items-start gap-3 cursor-pointer text-sm panel-2 p-3 rounded">
+        <input type="checkbox" class="mt-1 accent-[var(--com)]" ${getCheck(id)?'checked':''} onchange="setCheck('${id}',this.checked);renderModule(STATE.current);"/>
+        <span>${t}</span>
+      </label>
+    `).join('')}
+  </div>
+
+  <button class="btn btn-accent mt-4" onclick="shareProgress()">📤 Compartir progreso con el docente</button>
+</div>
+
+<div class="panel p-5 text-center" style="background:#1a0d05;">
+  <div style="font-size:30px">🎓</div>
+  <div class="text-lg font-semibold mt-2">¡Listo para la feria!</div>
+  <div class="text-sm muted mt-1">Ya tenés todo lo necesario para presentar el proyecto. Suerte 🍀</div>
+</div>
+`;
+function shareProgress(){
+  let t = `ENTREGABLES TEAM COMUNICACIÓN — ${getField('nombre','Proyecto')}\n${'═'.repeat(50)}\n\n`;
+  for(const [id,name] of DELIVERABLES){
+    t += `${getCheck(id)?'✅':'⏳'} ${name}\n`;
+  }
+  const done = DELIVERABLES.filter(([id])=>getCheck(id)).length;
+  t += `\n${done}/${DELIVERABLES.length} entregables completados.`;
+  copyText(t);
+}
+
+/* ============ BLOQUE 4 · SCRUM ============ */
+const DEFAULT_STORIES = [
+  { id:'s1-1', sprint:1, type:'diseñar', title:'Definir nombre del proyecto y eslogan',
+    crit:'Acordado por consenso del equipo, anotado en el Módulo 1.3',
+    deadline:'Sprint 1', col:'todo', who:'', blocked:false },
+  { id:'s1-2', sprint:1, type:'diseñar', title:'Definir paleta y tipografía del afiche',
+    crit:'3 hex elegidos, fuentes descargadas',
+    deadline:'Sprint 1', col:'todo', who:'', blocked:false },
+  { id:'s1-3', sprint:1, type:'diseñar', title:'Responder las 3 preguntas del Módulo 1.1',
+    crit:'Guardadas en el HTML, aprobadas por el equipo',
+    deadline:'Sprint 1', col:'todo', who:'', blocked:false },
+  { id:'s1-4', sprint:1, type:'filmar', title:'Empezar a filmar: fotos 1, 2 y 3',
+    crit:'Fotos tomadas y en carpeta compartida',
+    deadline:'Sprint 1', col:'todo', who:'', blocked:false },
+
+  { id:'s2-1', sprint:2, type:'filmar', title:'Tomar las 10 fotos del Módulo 2.3',
+    crit:'Checklist de fotos al 80% mínimo',
+    deadline:'Sprint 2', col:'todo', who:'', blocked:true, blockReason:'Esperando sistema armado del team Hardware' },
+  { id:'s2-2', sprint:2, type:'filmar', title:'Filmar Actos 1 y 2 del video',
+    crit:'Clips guardados en el celular designado',
+    deadline:'Sprint 2', col:'todo', who:'', blocked:false },
+  { id:'s2-3', sprint:2, type:'diseñar', title:'Primer borrador del afiche',
+    crit:'Las 7 zonas del afiche tienen contenido',
+    deadline:'Sprint 2', col:'todo', who:'', blocked:false },
+
+  { id:'s3-1', sprint:3, type:'filmar', title:'Editar el video completo en CapCut',
+    crit:'Duración 3-5 min, exportado en 1080p',
+    deadline:'Sprint 3', col:'todo', who:'', blocked:false },
+  { id:'s3-2', sprint:3, type:'filmar', title:'Subir el video a YouTube (no listado)',
+    crit:'URL del video disponible',
+    deadline:'Sprint 3', col:'todo', who:'', blocked:false },
+  { id:'s3-3', sprint:3, type:'diseñar', title:'Generar QR y pegarlo en el afiche',
+    crit:'QR probado con 3 celulares',
+    deadline:'Sprint 3', col:'todo', who:'', blocked:false },
+  { id:'s3-4', sprint:3, type:'imprimir', title:'Enviar afiche a imprimir (mínimo A2)',
+    crit:'Confirmación de la imprenta o impreso',
+    deadline:'Sprint 3', col:'todo', who:'', blocked:false },
+
+  { id:'s4-1', sprint:4, type:'imprimir', title:'Imprimir y recortar 8 cartelitos',
+    crit:'Cartelitos listos y laminados si es posible',
+    deadline:'Sprint 4', col:'todo', who:'', blocked:false },
+  { id:'s4-2', sprint:4, type:'stand', title:'Armar el stand completo y fotografiarlo',
+    crit:'Foto del stand para el historial',
+    deadline:'Sprint 4', col:'todo', who:'', blocked:false },
+  { id:'s4-3', sprint:4, type:'stand', title:'Ensayar la presentación 2 veces cronometradas',
+    crit:'Todos los integrantes del equipo participan',
+    deadline:'Sprint 4', col:'todo', who:'', blocked:false },
+  { id:'s4-4', sprint:4, type:'stand', title:'Checklist de entregables al 100%',
+    crit:'Todos los ítems del Módulo 3.6 en verde',
+    deadline:'Sprint 4', col:'todo', who:'', blocked:false },
+];
+function getStories(){
+  if(!STATE.scrum.stories){
+    STATE.scrum.stories = JSON.parse(JSON.stringify(DEFAULT_STORIES));
+    saveState();
+  }
+  return STATE.scrum.stories;
+}
+function findStory(id){ return getStories().find(s=>s.id===id); }
+function saveScrum(){ saveState(); }
+function typeBadge(type){
+  const map = {
+    'imprimir': ['🖨️','badge-imp'],
+    'filmar':   ['📹','badge-film'],
+    'diseñar':  ['✏️','badge-design'],
+    'stand':    ['🎪','badge-stand'],
+  };
+  const [i,c] = map[type]||['','chip'];
+  return `<span class="chip ${c}">${i} ${type}</span>`;
+}
+
+/* M 4.1 Backlog */
+MOD_BODY['m4.1'] = (m) => {
+  const stories = getStories();
+  const sprintT = {1:'Identidad y planificación', 2:'Producción de contenidos', 3:'Edición y armado', 4:'Stand y ensayo'};
+  return `
+${moduleHeader(m)}
+
+<div class="panel p-5 mb-6" style="background:#1a0d05;">
+  <div class="text-xs mono muted mb-2">ÉPICA</div>
+  <div class="text-lg font-semibold com">🎯 Feria presentada, documentada y comunicada</div>
+  <p class="text-sm muted mt-1">El team Comunicación entrega: afiche A2 impreso, video 3-5 min, QR funcionando, stand armado y presentación ensayada.</p>
+</div>
+
+${[1,2,3,4].map(sp=>{
+  const ss = stories.filter(s=>s.sprint===sp);
+  const done = ss.filter(s=>s.col==='done').length;
+  const pct = Math.round(done/ss.length*100);
+  return `
+  <div class="panel mb-4">
+    <div class="p-4 flex items-center justify-between border-b border-[var(--border)]">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="chip mono">Sprint ${sp}</span>
+          <span class="font-semibold">${sprintT[sp]}</span>
+        </div>
+        <div class="text-[11px] muted mt-1">${done} / ${ss.length} historias completadas</div>
+      </div>
+      <div class="text-right">
+        <div class="mono com text-2xl">${pct}%</div>
+        <div class="progress-bar mt-1" style="width:120px"><div style="width:${pct}%"></div></div>
+      </div>
+    </div>
+    <div class="p-3 space-y-2">
+      ${ss.map(st=>`
+        <div class="panel-2 p-3 flex items-start gap-3">
+          <input type="checkbox" class="mt-1 accent-[var(--com)]" ${st.col==='done'?'checked':''}
+            onchange="toggleStoryDone('${st.id}',this.checked)"/>
+          <div class="flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="text-sm ${st.col==='done'?'line-through muted':''}">${st.title}</div>
+              ${typeBadge(st.type)}
+              ${st.blocked?`<span class="chip badge-avanz" title="${st.blockReason||''}">🚫 Bloqueada</span>`:''}
+              ${st.col==='doing'?`<span class="chip" style="background:#003c5c;color:#5cc0ff;border-color:#005580;">🔄 En progreso</span>`:''}
+              ${st.col==='review'?`<span class="chip" style="background:#3c3000;color:#ffcc55;border-color:#554a00;">👁️ En revisión</span>`:''}
+              ${st.col==='done'?`<span class="chip badge-basico">✅ Hecho</span>`:''}
+            </div>
+            <div class="text-[11px] muted mt-1">✓ <em>${st.crit}</em></div>
+            ${st.blocked?`<div class="text-[11px] mt-1" style="color:#ff7788">🚫 ${st.blockReason||'Bloqueado'}</div>`:''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  </div>`;
+}).join('')}
+
+<!-- Dependencias -->
+<div class="grid grid-cols-3 gap-3 mt-8">
+  <div class="panel p-5">
+    <div class="flex items-center gap-2 mb-3"><span style="font-size:18px">⬅</span><div class="font-semibold text-sm">Necesita de Hardware</div></div>
+    <ul class="text-sm muted space-y-2">
+      <li>→ Fotos del sistema armado (Sprint 2)</li>
+      <li>→ Sistema funcionando para filmar Acto 4 (Sprint 3)</li>
+      <li>→ Arduino disponible el día de feria</li>
+    </ul>
+  </div>
+  <div class="panel p-5">
+    <div class="flex items-center gap-2 mb-3"><span style="font-size:18px">⬅</span><div class="font-semibold text-sm">Necesita de Software</div></div>
+    <ul class="text-sm muted space-y-2">
+      <li>→ Captura del gráfico final (antes Sprint 3)</li>
+      <li>→ Demo del dashboard corriendo (Sprint 3)</li>
+    </ul>
+  </div>
+  <div class="panel p-5">
+    <div class="flex items-center gap-2 mb-3"><span style="font-size:18px">➡</span><div class="font-semibold text-sm">Entrega a todos</div></div>
+    <ul class="text-sm muted space-y-2">
+      <li>→ Video del proceso en YouTube (Sprint 3)</li>
+      <li>→ Stand armado y funcional (Sprint 4)</li>
+    </ul>
+  </div>
+</div>
+`;
+};
+function toggleStoryDone(id, checked){
+  const s = findStory(id); if(!s) return;
+  s.col = checked ? 'done' : 'todo'; saveScrum(); renderModule(STATE.current);
+}
+
+/* M 4.2 Kanban */
+MOD_BODY['m4.2'] = (m) => {
+  const cols = [
+    {id:'todo',t:'Por hacer',ic:'📋',tint:'#222'},
+    {id:'doing',t:'En progreso',ic:'🔄',tint:'#003c5c'},
+    {id:'review',t:'En revisión',ic:'👁️',tint:'#3c3000'},
+    {id:'done',t:'Hecho',ic:'✅',tint:'#003c1a'},
+  ];
+  return `
+${moduleHeader(m)}
+<p class="text-sm muted mb-4">Arrastrá las tarjetas entre columnas. Cada tarjeta tiene tipo (imprimir / filmar / diseñar / stand) y fecha límite. Click para editar.</p>
+
+<div class="flex gap-3 mb-4 items-center text-xs">
+  <button class="btn" onclick="exportDaily()">📋 Reportar al Scrum Master</button>
+  <button class="btn btn-ghost text-[11px] muted" onclick="resetBoard()">↺ Resetear tablero</button>
+  <div class="flex-1"></div>
+  <span class="muted">Filtrar:</span>
+  <select id="kbn-sprint" class="bg-[var(--surface2)] border border-[var(--border)] rounded px-2 py-1 text-xs mono" onchange="renderBoard()">
+    <option value="all">Todos los sprints</option>
+    <option value="1">Sprint 1</option><option value="2">Sprint 2</option>
+    <option value="3">Sprint 3</option><option value="4">Sprint 4</option>
+  </select>
+  <select id="kbn-type" class="bg-[var(--surface2)] border border-[var(--border)] rounded px-2 py-1 text-xs mono" onchange="renderBoard()">
+    <option value="all">Todos los tipos</option>
+    <option value="imprimir">🖨️ Imprimir</option>
+    <option value="filmar">📹 Filmar</option>
+    <option value="diseñar">✏️ Diseñar</option>
+    <option value="stand">🎪 Stand</option>
+  </select>
+</div>
+
+<div class="grid grid-cols-4 gap-3" id="kanban">
+${cols.map(c=>`
+  <div class="panel-2 p-3" style="border-top:3px solid ${c.tint};">
+    <div class="flex items-center justify-between mb-3 text-xs font-semibold">
+      <span>${c.ic} ${c.t}</span>
+      <span class="muted mono" id="cnt-${c.id}">0</span>
+    </div>
+    <div class="kanban-drop space-y-2" data-col="${c.id}" style="min-height:200px;"></div>
+  </div>
+`).join('')}
+</div>
+
+<style>
+  .kbn-card{background:#0a0a0a;border:1px solid var(--border);border-radius:8px;padding:10px;cursor:grab;font-size:12px;transition:all .15s;}
+  .kbn-card:hover{border-color:#444;}
+  .kbn-card.dragging{opacity:.4;cursor:grabbing;}
+  .kanban-drop.drag-over{background:#1a0d05;outline:1px dashed var(--com);outline-offset:-4px;border-radius:6px;}
+  .kbn-card.blocked{border-color:#551122;}
+  .kbn-card .who{font-size:10px;color:#888;margin-top:6px;font-family:monospace;}
+</style>
+
+<div id="kbn-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,.7);">
+  <div class="panel-2 p-5 w-[440px] max-w-[95vw]">
+    <div class="flex justify-between items-start mb-3">
+      <div class="text-xs muted">Editar historia</div>
+      <button onclick="closeStoryModal()" class="btn">✕</button>
+    </div>
+    <div id="kbn-modal-body"></div>
+  </div>
+</div>
+`;
+};
+MOD_AFTER['m4.2'] = () => { renderBoard(); };
+function renderBoard(){
+  const stories = getStories();
+  const fs = document.getElementById('kbn-sprint')?.value || 'all';
+  const ft = document.getElementById('kbn-type')?.value || 'all';
+  ['todo','doing','review','done'].forEach(col=>{
+    const drop = document.querySelector(`.kanban-drop[data-col="${col}"]`);
+    if(!drop) return;
+    drop.innerHTML='';
+    const items = stories.filter(s=>s.col===col && (fs==='all'||s.sprint==+fs) && (ft==='all'||s.type===ft));
+    document.getElementById('cnt-'+col).textContent = items.length;
+    items.forEach(st=>{
+      const tb = typeBadge(st.type);
+      const card = document.createElement('div');
+      card.className='kbn-card'+(st.blocked?' blocked':'');
+      card.draggable=true;
+      card.innerHTML = `
+        <div class="flex items-start gap-1 flex-wrap mb-2">
+          <span class="chip mono" style="font-size:9px;padding:1px 5px;">S${st.sprint}</span>
+          ${tb}
+          ${st.blocked?'<span title="'+(st.blockReason||'')+'">🚫</span>':''}
+        </div>
+        <div>${st.title}</div>
+        ${st.who?`<div class="who">👤 ${st.who}</div>`:''}
+      `;
+      card.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', st.id); card.classList.add('dragging'); });
+      card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+      card.addEventListener('click',()=>openStoryModal(st.id));
+      drop.appendChild(card);
+    });
+  });
+  document.querySelectorAll('.kanban-drop').forEach(drop=>{
+    drop.ondragover = e=>{ e.preventDefault(); drop.classList.add('drag-over'); };
+    drop.ondragleave = ()=> drop.classList.remove('drag-over');
+    drop.ondrop = e=>{
+      e.preventDefault(); drop.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain');
+      const s = findStory(id);
+      if(s){ s.col = drop.dataset.col; saveScrum(); renderBoard(); }
+    };
+  });
+}
+function openStoryModal(id){
+  const s = findStory(id); if(!s) return;
+  const modal = document.getElementById('kbn-modal');
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+  document.getElementById('kbn-modal-body').innerHTML = `
+    <div class="flex items-center gap-2 mb-2 flex-wrap">
+      <span class="chip mono">Sprint ${s.sprint}</span>
+      ${typeBadge(s.type)}
+      ${s.blocked?'<span class="chip badge-avanz">🚫 Bloqueada</span>':''}
+    </div>
+    <h3 class="text-base font-semibold mb-3">${s.title}</h3>
+    <div class="panel-2 p-3 mb-3 text-xs"><span class="muted">Criterio:</span><br>✓ <em>${s.crit}</em></div>
+    <label class="text-xs muted">¿Quién lo tiene?</label>
+    <input type="text" value="${s.who||''}" placeholder="Tu nombre"
+      class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mono mt-1 mb-3"
+      oninput="findStory('${s.id}').who=this.value;saveScrum();"/>
+    <label class="text-xs muted">Estado</label>
+    <select class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mono mt-1 mb-3"
+      onchange="findStory('${s.id}').col=this.value;saveScrum();renderBoard();">
+      <option value="todo" ${s.col==='todo'?'selected':''}>📋 Por hacer</option>
+      <option value="doing" ${s.col==='doing'?'selected':''}>🔄 En progreso</option>
+      <option value="review" ${s.col==='review'?'selected':''}>👁️ En revisión</option>
+      <option value="done" ${s.col==='done'?'selected':''}>✅ Hecho</option>
+    </select>
+    <label class="text-xs muted flex items-center gap-2">
+      <input type="checkbox" ${s.blocked?'checked':''} class="accent-[var(--com)]"
+        onchange="findStory('${s.id}').blocked=this.checked;saveScrum();renderBoard();"/> Bloqueada
+    </label>
+    <input type="text" value="${s.blockReason||''}" placeholder="¿Por qué está bloqueada?"
+      class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-xs mono mt-2"
+      oninput="findStory('${s.id}').blockReason=this.value;saveScrum();"/>
+  `;
+}
+function closeStoryModal(){ document.getElementById('kbn-modal').classList.add('hidden'); document.getElementById('kbn-modal').classList.remove('flex'); renderBoard(); }
+function resetBoard(){
+  if(!confirm('¿Resetear el tablero?')) return;
+  STATE.scrum.stories = JSON.parse(JSON.stringify(DEFAULT_STORIES));
+  saveScrum(); renderBoard();
+}
+function exportDaily(){
+  const stories = getStories();
+  const cols = {todo:'📋 Por hacer', doing:'🔄 En progreso', review:'👁️ En revisión', done:'✅ Hecho'};
+  let txt = `REPORTE TEAM COMUNICACIÓN — ${new Date().toLocaleDateString('es-AR')}\n` + '═'.repeat(50)+'\n';
+  for(const col of Object.keys(cols)){
+    const items = stories.filter(s=>s.col===col);
+    if(!items.length) continue;
+    txt += `\n${cols[col]} (${items.length})\n`;
+    items.forEach(s=> txt += `  • [S${s.sprint}|${s.type}] ${s.title}${s.who?' — '+s.who:''}${s.blocked?' 🚫':''}\n`);
+  }
+  const blk = stories.filter(s=>s.blocked);
+  if(blk.length){ txt += `\n🚫 BLOQUEOS\n`; blk.forEach(s=> txt += `  • ${s.title}\n    razón: ${s.blockReason||'(sin razón)'}\n`); }
+  copyText(txt);
+}
+
+/* M 4.3 Daily */
+MOD_BODY['m4.3'] = (m) => {
+  const ds = STATE.scrum.dailies;
+  return `
+${moduleHeader(m)}
+<div class="panel p-5 mb-6" style="background:#1a0d05;">
+  <div class="text-sm">🌅 <strong>El Daily</strong> es una reunión cortita al principio de la clase. Cada uno cuenta qué pieza de comunicación avanzó, qué va a hacer hoy y si necesita algo de los otros teams.</div>
+</div>
+
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-4">FORMULARIO DE DAILY</div>
+  <div class="space-y-4">
+    <div>
+      <label class="text-xs muted">Nombre</label>
+      <input id="d-name" type="text" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2.5 text-sm mt-1"/>
+    </div>
+    <div>
+      <label class="text-xs muted">🟢 ¿Qué pieza de comunicación avancé desde el último Daily?</label>
+      <textarea id="d-done" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2.5 text-sm mt-1" style="min-height:60px;" placeholder="Ej: filmé los clips del Acto 1 del video..."></textarea>
+    </div>
+    <div>
+      <label class="text-xs muted">🎯 ¿Qué voy a hacer hoy?</label>
+      <textarea id="d-today" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2.5 text-sm mt-1" style="min-height:60px;" placeholder="Ej: empiezo el borrador del afiche..."></textarea>
+    </div>
+    <div>
+      <label class="text-xs muted">🤝 ¿Necesito algo de Hardware o Software para continuar?</label>
+      <textarea id="d-block" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2.5 text-sm mt-1" style="min-height:60px;" placeholder="Si no hay bloqueos, dejá vacío"></textarea>
+    </div>
+    <div class="flex justify-end">
+      <button class="btn btn-accent" onclick="saveDaily()">Enviar Daily ✓</button>
+    </div>
+  </div>
+</div>
+
+<div class="text-xs mono muted mb-3">HISTORIAL DE DAILIES (${ds.length})</div>
+<div class="space-y-3">
+${ds.length===0
+  ? `<div class="panel p-6 text-center text-sm muted">Todavía no enviaste ningún Daily.</div>`
+  : ds.slice().reverse().map(d=>`
+    <div class="panel p-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-sm font-semibold">${d.name||'(sin nombre)'}</div>
+        <div class="text-[11px] muted mono">${d.ts}</div>
+      </div>
+      ${d.done?`<div class="text-xs mb-1"><span class="com">🟢</span> <span class="muted">Avancé:</span> ${d.done}</div>`:''}
+      ${d.today?`<div class="text-xs mb-1"><span style="color:#5cc0ff">🎯</span> <span class="muted">Hoy:</span> ${d.today}</div>`:''}
+      ${d.block?`<div class="text-xs"><span style="color:#ffcc55">🤝</span> <span class="muted">Necesito:</span> ${d.block}</div>`:''}
+    </div>
+  `).join('')
+}
+</div>
+`;
+};
+function saveDaily(){
+  const name = document.getElementById('d-name').value.trim();
+  const done = document.getElementById('d-done').value.trim();
+  const today = document.getElementById('d-today').value.trim();
+  const block = document.getElementById('d-block').value.trim();
+  if(!name && !done && !today){ toast('Completá al menos algo'); return; }
+  const ts = new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  STATE.scrum.dailies.push({name,done,today,block,ts});
+  saveScrum(); toast('✓ Daily registrado'); renderModule(STATE.current);
+}
+
+/* M 4.4 Review + Retro */
+const REVIEW_CHECKS = [
+  'Mostrar fotos nuevas tomadas',
+  'Mostrar avance del afiche (borrador en pantalla)',
+  'Mostrar clips filmados (aunque no estén editados)',
+  'Decir qué entregable físico tiene riesgo de no llegar a tiempo',
+];
+MOD_BODY['m4.4'] = (m) => `
+${moduleHeader(m)}
+<div class="grid grid-cols-2 gap-6">
+
+  <div>
+    <div class="text-xs mono muted mb-3">SPRINT REVIEW</div>
+    <p class="text-sm muted mb-4">Al final del Sprint, el team muestra qué hizo en vivo. Esta checklist te ayuda a no olvidarte de nada.</p>
+
+    ${[1,2,3,4].map(sp=>{
+      const done = REVIEW_CHECKS.filter((_,i)=>STATE.scrum.review['s'+sp+'-'+i]).length;
+      return `
+      <details class="panel mb-3" ${sp===1?'open':''}>
+        <summary class="p-3 flex items-center gap-3">
+          <span class="accordion-arrow com">›</span>
+          <span class="chip mono">Sprint ${sp}</span>
+          <span class="font-semibold text-sm">Checklist Review</span>
+          <span class="ml-auto text-[11px] muted">${done} / ${REVIEW_CHECKS.length}</span>
+        </summary>
+        <div class="px-4 pb-4 space-y-2">
+          ${REVIEW_CHECKS.map((c,i)=>`
+            <label class="flex items-start gap-3 text-sm cursor-pointer">
+              <input type="checkbox" class="mt-1 accent-[var(--com)]"
+                ${STATE.scrum.review['s'+sp+'-'+i]?'checked':''}
+                onchange="STATE.scrum.review['s${sp}-${i}']=this.checked;saveScrum();renderModule(STATE.current);"/>
+              <span>${c}</span>
+            </label>
+          `).join('')}
+        </div>
+      </details>`;
+    }).join('')}
+  </div>
+
+  <div>
+    <div class="text-xs mono muted mb-3">RETROSPECTIVA RÁPIDA</div>
+    <p class="text-sm muted mb-4">Al final del Sprint: ¿qué quedó bien, qué nos costó, qué necesitamos de los otros teams?</p>
+    ${[1,2,3,4].map(sp=>{
+      const r = STATE.scrum.retro['s'+sp]||{good:'',bad:'',change:''};
+      return `
+      <details class="panel mb-3" ${sp===1?'open':''}>
+        <summary class="p-3 flex items-center gap-3">
+          <span class="accordion-arrow com">›</span>
+          <span class="chip mono">Sprint ${sp}</span>
+          <span class="font-semibold text-sm">Retro</span>
+        </summary>
+        <div class="px-4 pb-4 space-y-3">
+          <div>
+            <label class="text-xs com">🟢 ¿Qué pieza quedó bien?</label>
+            <textarea oninput="retroSave(${sp},'good',this.value)" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1" style="min-height:50px;">${r.good||''}</textarea>
+          </div>
+          <div>
+            <label class="text-xs" style="color:#ff7788">🔴 ¿Qué nos costó más de lo esperado?</label>
+            <textarea oninput="retroSave(${sp},'bad',this.value)" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1" style="min-height:50px;">${r.bad||''}</textarea>
+          </div>
+          <div>
+            <label class="text-xs" style="color:#ffcc55">🟡 ¿Qué necesitamos de los otros teams?</label>
+            <textarea oninput="retroSave(${sp},'change',this.value)" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1" style="min-height:50px;">${r.change||''}</textarea>
+          </div>
+        </div>
+      </details>`;
+    }).join('')}
+  </div>
+</div>
+`;
+function retroSave(sp,f,v){ STATE.scrum.retro['s'+sp]=STATE.scrum.retro['s'+sp]||{}; STATE.scrum.retro['s'+sp][f]=v; saveScrum(); }
+
+/* ============ Master checklist ============ */
+function openMasterChecklist(){
+  const m = document.getElementById('master-modal');
+  m.classList.remove('hidden'); m.classList.add('flex');
+  const groups = [
+    {t:'Afiche (Módulo 2.1)', ids:[['a-1','El título se lee desde 3 metros'],['a-2','Hay al menos un gráfico o dato'],['a-3','Fotos reales del proceso'],['a-4','QR funciona y lleva al video'],['a-5','Nombres del equipo visibles'],['a-6','Impreso en al menos A2']]},
+    {t:'Stand (Módulo 2.2)', ids:[['s-1','Afiche impreso'],['s-2','Cartelitos laminados'],['s-3','Mantel verde'],['s-4','Maceta funcionando'],['s-5','Tablet/notebook para video'],['s-6','Extensión eléctrica'],['s-7','Display de fondo'],['s-8','Cinta / chinches']]},
+    {t:'Filmación (Módulo 3.2)', ids:[['f-1','Batería 100%'],['f-2','Espacio libre'],['f-3','Modo avión'],['f-4','Brillo manual'],['f-5','Guión a mano'],['f-6','Lente limpia']]},
+    {t:'QR (Módulo 3.4)', ids:[['qr-1','Video en YouTube'],['qr-2','QR probado 3 celulares'],['qr-3','Tamaño mínimo 4×4 cm'],['qr-4','Texto al lado del QR']]},
+    {t:'Día de la feria (Módulo 3.5)', ids:[['d-1','Arduino cargado'],['d-2','Video en loop'],['d-3','Afiche colgado'],['d-4','Cartelitos pegados'],['d-5','Cada uno sabe su parte'],['d-6','Sistema probado 1h antes'],['d-7','Siempre alguien en el stand']]},
+    {t:'Entregables (Módulo 3.6)', ids:DELIVERABLES},
+  ];
+  let total=0, done=0;
+  let html = '';
+  for(const g of groups){
+    const sub = g.ids.length;
+    const subDone = g.ids.filter(([id])=>getCheck(id)).length;
+    total += sub; done += subDone;
+    html += `<div class="panel-2 p-4 mb-3">
+      <div class="flex justify-between items-center mb-2">
+        <div class="font-semibold text-sm">${g.t}</div>
+        <div class="text-xs com mono">${subDone}/${sub}</div>
+      </div>
+      ${g.ids.map(([id,t])=>`
+        <label class="flex items-start gap-3 cursor-pointer text-xs py-1">
+          <input type="checkbox" class="mt-1 accent-[var(--com)]" ${getCheck(id)?'checked':''} onchange="setCheck('${id}',this.checked);openMasterChecklist();"/>
+          <span>${t}</span>
+        </label>
+      `).join('')}
+    </div>`;
+  }
+  const pct = Math.round(done/total*100);
+  document.getElementById('master-content').innerHTML = `
+    <div class="panel-2 p-4 mb-4" style="background:#1a0d05;">
+      <div class="flex justify-between text-xs mb-2"><span class="muted">Progreso global</span><span class="com mono">${done}/${total} (${pct}%)</span></div>
+      <div class="progress-bar"><div style="width:${pct}%"></div></div>
+    </div>
+    ${html}
+  `;
+}
+function closeMasterChecklist(){ const m=document.getElementById('master-modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+</script>
+
+</body>
+</html>

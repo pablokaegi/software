@@ -1,0 +1,2198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<title>Arduino desde Cero · Scrum del Proyecto</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<style>
+  :root{
+    --bg:#0a0a0a; --surface:#111; --surface2:#1a1a1a; --surface3:#222;
+    --accent:#00ff88;
+    --scrum:#a78bfa; --scrum-dim:#a78bfa22;
+    --hw:#f97316; --sw:#3b82f6; --com:#ff6b35;
+    --text:#e6e6e6; --muted:#888; --border:#262626;
+    --red:#ff5577; --yellow:#ffcc00;
+  }
+  html,body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,system-ui,sans-serif;}
+  .mono{font-family:'JetBrains Mono','Fira Code','Menlo',monospace;}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;}
+  .panel-2{background:var(--surface2);border:1px solid var(--border);border-radius:10px;}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:2px 8px;border-radius:999px;font-size:11px;border:1px solid var(--border);background:var(--surface2);}
+  .accent{color:var(--accent);}
+  .scrum{color:var(--scrum);}
+  .muted{color:var(--muted);}
+  .pulse-dot{display:inline-block;width:8px;height:8px;border-radius:999px;background:var(--scrum);box-shadow:0 0 8px var(--scrum);animation:pulse 1.6s ease-in-out infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.45;transform:scale(.8);}}
+  .module-link{display:block;padding:8px 10px;border-radius:6px;font-size:13px;color:#bdbdbd;border-left:2px solid transparent;cursor:pointer;}
+  .module-link:hover{background:var(--surface2);color:#fff;}
+  .module-link.active{background:#1a1428;color:var(--scrum);border-left-color:var(--scrum);}
+  .module-link.done::before{content:"✓ ";color:var(--scrum);font-size:11px;}
+  .module-link.pending::before{content:"○ ";color:#444;font-size:11px;}
+  .block-label{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#666;padding:14px 10px 6px;}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:8px;font-size:13px;font-weight:500;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;transition:all .15s;}
+  .btn:hover{background:var(--surface3);border-color:#444;}
+  .btn-accent{background:var(--scrum);color:#0d0521;border-color:var(--scrum);}
+  .btn-accent:hover{background:#c4a8ff;border-color:#c4a8ff;}
+  .btn-ghost{background:transparent;}
+  .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);opacity:0;background:#1a1428;color:var(--scrum);border:1px solid var(--scrum);padding:10px 18px;border-radius:8px;font-size:13px;transition:all .25s;z-index:50;pointer-events:none;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .badge-basico{background:#003c1a;color:#5fffaa;border:1px solid #00553a;}
+  .badge-inter{background:#3c3000;color:#ffcc55;border:1px solid #554a00;}
+  .badge-avanz{background:#3c0010;color:#ff7799;border:1px solid #551122;}
+  .team-hw{background:#3a1c08;color:#ffb074;border:1px solid #5c2d12;}
+  .team-sw{background:#082548;color:#7bb5ff;border:1px solid #1d3a6b;}
+  .team-com{background:#3a1a08;color:#ff9b6b;border:1px solid #5c2d18;}
+  .team-scrum{background:#1f1a3a;color:#b9a3ff;border:1px solid #36306b;}
+  .prio-high{background:#3c0010;color:#ff7799;border:1px solid #551122;}
+  .prio-med{background:#3c3000;color:#ffcc55;border:1px solid #554a00;}
+  .prio-low{background:#0a2a18;color:#5fffaa;border:1px solid #1d5c3a;}
+  details > summary{cursor:pointer;list-style:none;}
+  details > summary::-webkit-details-marker{display:none;}
+  details[open] .accordion-arrow{transform:rotate(90deg);}
+  .accordion-arrow{transition:transform .2s;display:inline-block;}
+  .progress-bar{height:4px;background:#1a1a1a;border-radius:999px;overflow:hidden;}
+  .progress-bar > div{height:100%;background:linear-gradient(90deg,var(--scrum),var(--accent));transition:width .4s;}
+  ::-webkit-scrollbar{width:8px;height:8px;}
+  ::-webkit-scrollbar-track{background:#0a0a0a;}
+  ::-webkit-scrollbar-thumb{background:#222;border-radius:4px;}
+  ::-webkit-scrollbar-thumb:hover{background:#333;}
+  .quiz-opt{padding:10px 14px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;gap:10px;align-items:flex-start;transition:all .15s;}
+  .quiz-opt:hover{background:var(--surface3);border-color:#444;}
+  .quiz-opt.correct{background:#062b1a;border-color:var(--accent);color:#aaffd0;}
+  .quiz-opt.wrong{background:#2b0b15;border-color:var(--red);color:#ffaabb;}
+  .quiz-opt.disabled{cursor:default;}
+  .fade-in{animation:fadeIn .4s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+  .scrum-logo{
+    width:24px;height:24px;border-radius:6px;background:linear-gradient(135deg,#c4a8ff,#7c52ff);
+    display:flex;align-items:center;justify-content:center;font-size:13px;color:#fff;font-weight:700;
+  }
+  .timer-big{font-family:'JetBrains Mono',monospace;font-size:72px;font-weight:700;}
+  .light-green{display:inline-block;width:14px;height:14px;border-radius:50%;background:#5fffaa;box-shadow:0 0 12px #5fffaa;}
+  .light-yellow{display:inline-block;width:14px;height:14px;border-radius:50%;background:#ffcc55;box-shadow:0 0 12px #ffcc55;}
+  .light-red{display:inline-block;width:14px;height:14px;border-radius:50%;background:#ff5577;box-shadow:0 0 12px #ff5577;}
+  .kbn-card{background:#0a0a0a;border:1px solid var(--border);border-radius:8px;padding:10px;cursor:grab;font-size:12px;transition:all .15s;position:relative;}
+  .kbn-card:hover{border-color:#444;}
+  .kbn-card.dragging{opacity:.4;cursor:grabbing;}
+  .kanban-drop.drag-over{background:#1a1428;outline:1px dashed var(--scrum);outline-offset:-4px;border-radius:6px;}
+  .kbn-card.blocked{border-color:#551122;}
+  .kbn-card .who{font-size:10px;color:#888;margin-top:6px;font-family:monospace;}
+  .kbn-card.team-hw-card{border-left:3px solid var(--hw);}
+  .kbn-card.team-sw-card{border-left:3px solid var(--sw);}
+  .kbn-card.team-com-card{border-left:3px solid var(--com);}
+  .pp-card{
+    background:linear-gradient(180deg,#1a1428,#0d0820);
+    border:1px solid var(--scrum); border-radius:8px;
+    width:80px;height:120px;display:flex;align-items:center;justify-content:center;
+    font-family:'JetBrains Mono',monospace;font-size:38px;font-weight:800;
+    color:var(--scrum);cursor:pointer;transition:all .15s;
+  }
+  .pp-card:hover{transform:translateY(-6px);box-shadow:0 12px 24px -10px var(--scrum);}
+  .pp-card.selected{background:var(--scrum);color:#0d0521;transform:translateY(-6px);}
+  .retro-card{
+    background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;font-size:12px;
+    display:flex;justify-content:space-between;gap:6px;align-items:center;
+  }
+  .retro-col{min-height:200px;background:var(--surface2);border-radius:8px;padding:10px;border-top:3px solid;}
+  .vote-btn{background:#222;border:1px solid #333;border-radius:4px;padding:1px 6px;font-size:10px;cursor:pointer;color:#aaa;}
+  .vote-btn:hover{border-color:var(--scrum);color:var(--scrum);}
+  .vote-btn.voted{background:var(--scrum);color:#0d0521;border-color:var(--scrum);}
+  table.bk{width:100%;border-collapse:collapse;font-size:12px;}
+  table.bk th, table.bk td{border:1px solid #2a2a2a;padding:6px 8px;text-align:left;vertical-align:top;}
+  table.bk th{background:#1a1a1a;color:var(--scrum);font-size:10px;text-transform:uppercase;letter-spacing:.05em;}
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- Sticky banner -->
+<div class="sticky top-0 z-40 border-b border-[var(--border)]" style="background:linear-gradient(90deg,#1a1428,#0a0a0a);">
+  <div class="px-6 py-2.5 flex items-center justify-between text-sm">
+    <div class="flex items-center gap-3">
+      <span class="pulse-dot"></span>
+      <span class="mono scrum">⚙️ Team Scrum</span>
+      <span class="muted">— el equipo que hace que todo funcione. Sin código, sin cables: facilitamos.</span>
+    </div>
+    <div class="flex items-center gap-4 text-xs muted">
+      <span id="proj-light" class="flex items-center gap-2"><span class="light-green"></span> Semáforo: cargando...</span>
+      <span class="chip mono" style="border-color:#36306b;color:#b9a3ff;">v1.0</span>
+    </div>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="flex" style="min-height:calc(100vh - 41px);">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="border-r border-[var(--border)] flex-shrink-0 flex flex-col" style="width:300px;background:#080808;">
+    <div class="p-5 border-b border-[var(--border)]">
+      <div class="flex items-center gap-3 mb-1">
+        <div class="scrum-logo">⚙</div>
+        <div>
+          <div class="text-sm font-semibold">Arduino desde Cero</div>
+          <div class="text-[11px] scrum mono">Scrum · Coordinación · Métricas</div>
+        </div>
+      </div>
+      <div class="mt-4">
+        <div class="flex justify-between text-[11px] muted mb-1.5">
+          <span>Progreso total</span>
+          <span><span id="progress-num">0</span>/<span id="progress-tot">18</span></span>
+        </div>
+        <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+      </div>
+      <!-- Project status panel -->
+      <div class="panel-2 p-3 mt-4">
+        <div class="text-[10px] muted mono mb-2">SEMÁFORO DEL PROYECTO</div>
+        <div id="proj-status" class="flex items-center gap-2"></div>
+        <div id="proj-status-msg" class="text-[11px] muted mt-2"></div>
+      </div>
+    </div>
+
+    <nav id="module-nav" class="flex-1 overflow-y-auto py-2"></nav>
+
+    <div class="p-3 border-t border-[var(--border)] space-y-2">
+      <button onclick="openReport()" class="btn w-full justify-center">
+        📊 Reporte general
+      </button>
+      <button onclick="resetProgress()" class="btn btn-ghost w-full justify-center text-[11px] muted">Reiniciar progreso</button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main id="main" class="flex-1 overflow-x-hidden">
+    <div id="module-content" class="max-w-[1100px] mx-auto px-10 py-10 fade-in"></div>
+
+    <div class="max-w-[1100px] mx-auto px-10 pb-16 flex items-center justify-between">
+      <button id="prev-btn" class="btn">← Anterior</button>
+      <button id="mark-done" class="btn btn-accent">Marcar como completado ✓</button>
+      <button id="next-btn" class="btn">Siguiente →</button>
+    </div>
+  </main>
+</div>
+
+<!-- Story modal (Sprintboard) -->
+<div id="story-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,.7);">
+  <div class="panel-2 p-5 w-[480px] max-w-[95vw]">
+    <div class="flex justify-between items-start mb-3">
+      <div class="text-xs muted">Tarea</div>
+      <button onclick="closeStoryModal()" class="btn">✕</button>
+    </div>
+    <div id="story-modal-body"></div>
+  </div>
+</div>
+
+<!-- Report modal -->
+<div id="report-modal" class="fixed inset-0 z-50 hidden items-center justify-center" style="background:rgba(0,0,0,.8);">
+  <div class="panel-2 w-[760px] max-w-[95vw] max-h-[90vh] overflow-y-auto p-6">
+    <div class="flex justify-between items-start mb-4">
+      <h2 class="text-lg font-semibold">📊 Reporte del proyecto</h2>
+      <div class="flex gap-2">
+        <button onclick="copyReport()" class="btn">📋 Copiar</button>
+        <button onclick="closeReport()" class="btn">✕</button>
+      </div>
+    </div>
+    <pre id="report-content" class="mono text-xs whitespace-pre-wrap bg-[var(--bg)] p-4 rounded border border-[var(--border)]" style="line-height:1.7;"></pre>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast">Copiado</div>
+
+<!-- =========================================================== -->
+<script>
+const BLOCKS = [
+  { id:'b1', title:'Bloque 1 · Scrum desde cero' },
+  { id:'b2', title:'Bloque 2 · Rituales del proyecto' },
+  { id:'b3', title:'Bloque 3 · Sprintboard y coordinación' },
+  { id:'b4', title:'Bloque 4 · Herramientas y plus' },
+];
+const MODULES = [
+  { id:'m1.1', block:'b1', num:'1.1', title:'¿Qué es Scrum y para qué sirve acá?', level:'basico' },
+  { id:'m1.2', block:'b1', num:'1.2', title:'Los roles del proyecto (versión escolar)', level:'basico' },
+  { id:'m1.3', block:'b1', num:'1.3', title:'El Backlog del proyecto', level:'basico' },
+  { id:'m1.4', block:'b1', num:'1.4', title:'Autoevaluación Bloque 1', level:'basico' },
+
+  { id:'m2.1', block:'b2', num:'2.1', title:'El Sprint: la semana de trabajo', level:'inter' },
+  { id:'m2.2', block:'b2', num:'2.2', title:'Daily Standup: el ritual diario', level:'inter' },
+  { id:'m2.3', block:'b2', num:'2.3', title:'Sprint Planning: planificar la semana', level:'inter' },
+  { id:'m2.4', block:'b2', num:'2.4', title:'Sprint Review + Retrospectiva', level:'inter' },
+  { id:'m2.5', block:'b2', num:'2.5', title:'Gestión de bloqueos', level:'inter' },
+
+  { id:'m3.1', block:'b3', num:'3.1', title:'El Sprintboard: el corazón del proyecto', level:'avanz' },
+  { id:'m3.2', block:'b3', num:'3.2', title:'Burndown Chart: ¿vamos bien?', level:'avanz' },
+  { id:'m3.3', block:'b3', num:'3.3', title:'Dependencias entre teams', level:'avanz' },
+  { id:'m3.4', block:'b3', num:'3.4', title:'Normas de comunicación', level:'inter' },
+  { id:'m3.5', block:'b3', num:'3.5', title:'Métricas del proyecto', level:'avanz' },
+  { id:'m3.6', block:'b3', num:'3.6', title:'Final + Entregables del team', level:'avanz' },
+
+  { id:'m4.1', block:'b4', num:'4.1', title:'Herramientas Agile gratuitas', level:'basico' },
+  { id:'m4.2', block:'b4', num:'4.2', title:'Planning Poker: estimar como equipo', level:'inter' },
+  { id:'m4.3', block:'b4', num:'4.3', title:'Glosario Scrum (cheatsheet)', level:'basico' },
+];
+
+const STATE = {
+  current: 'm1.1',
+  done: JSON.parse(localStorage.getItem('scrum_done')||'{}'),
+  notes: JSON.parse(localStorage.getItem('scrum_notes')||'{}'),
+  quiz:  JSON.parse(localStorage.getItem('scrum_quiz')||'{}'),
+  checks: JSON.parse(localStorage.getItem('scrum_checks')||'{}'),
+  fields: JSON.parse(localStorage.getItem('scrum_fields')||'{}'),
+  board: JSON.parse(localStorage.getItem('scrum_board')||'null'),
+  dailies: JSON.parse(localStorage.getItem('scrum_dailies')||'[]'),
+  retros: JSON.parse(localStorage.getItem('scrum_retros')||'{}'),
+  blocks: JSON.parse(localStorage.getItem('scrum_blocks')||'[]'),
+  deps:   JSON.parse(localStorage.getItem('scrum_deps')||'null'),
+};
+
+function saveState(){
+  localStorage.setItem('scrum_done', JSON.stringify(STATE.done));
+  localStorage.setItem('scrum_notes', JSON.stringify(STATE.notes));
+  localStorage.setItem('scrum_quiz', JSON.stringify(STATE.quiz));
+  localStorage.setItem('scrum_checks', JSON.stringify(STATE.checks));
+  localStorage.setItem('scrum_fields', JSON.stringify(STATE.fields));
+  localStorage.setItem('scrum_board', JSON.stringify(STATE.board));
+  localStorage.setItem('scrum_dailies', JSON.stringify(STATE.dailies));
+  localStorage.setItem('scrum_retros', JSON.stringify(STATE.retros));
+  localStorage.setItem('scrum_blocks', JSON.stringify(STATE.blocks));
+  localStorage.setItem('scrum_deps', JSON.stringify(STATE.deps));
+  updateProjectLight();
+}
+
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1800);
+}
+async function copyText(text){
+  try{ await navigator.clipboard.writeText(text); toast('📋 Copiado'); }
+  catch{ toast('No se pudo copiar'); }
+}
+function badge(level){
+  if(level==='basico') return `<span class="chip badge-basico">🟢 Básico</span>`;
+  if(level==='inter')  return `<span class="chip badge-inter">🟡 Intermedio</span>`;
+  return `<span class="chip badge-avanz">🔴 Avanzado</span>`;
+}
+function setField(id, val){ STATE.fields[id]=val; saveState(); }
+function getField(id, def=''){ return STATE.fields[id] ?? def; }
+function setCheck(id, val){ STATE.checks[id]=val; saveState(); }
+function getCheck(id){ return !!STATE.checks[id]; }
+
+document.getElementById('progress-tot').textContent = MODULES.length;
+
+function renderSidebar(){
+  const nav=document.getElementById('module-nav');
+  let html='';
+  for(const b of BLOCKS){
+    html += `<div class="block-label">${b.title}</div>`;
+    for(const m of MODULES.filter(x=>x.block===b.id)){
+      const cls = m.id===STATE.current ? 'active' : '';
+      const done = STATE.done[m.id] ? 'done' : 'pending';
+      html += `<div class="module-link ${cls} ${done}" onclick="goTo('${m.id}')">
+        <div class="flex items-center justify-between">
+          <span><span class="mono muted">${m.num}</span>  ${m.title}</span>
+        </div>
+      </div>`;
+    }
+  }
+  nav.innerHTML=html;
+  const doneCount = Object.values(STATE.done).filter(Boolean).length;
+  document.getElementById('progress-num').textContent = doneCount;
+  document.getElementById('progress-fill').style.width = ((doneCount/MODULES.length)*100).toFixed(1)+'%';
+}
+function goTo(id){ STATE.current=id; renderSidebar(); renderModule(id); document.getElementById('main').scrollTo({top:0,behavior:'smooth'}); }
+function nextModule(){ const idx=MODULES.findIndex(m=>m.id===STATE.current); if(idx<MODULES.length-1) goTo(MODULES[idx+1].id); }
+function prevModule(){ const idx=MODULES.findIndex(m=>m.id===STATE.current); if(idx>0) goTo(MODULES[idx-1].id); }
+function markDone(){ STATE.done[STATE.current]=true; saveState(); renderSidebar(); toast('✓ Módulo completado'); setTimeout(nextModule,500); }
+function resetProgress(){
+  if(!confirm('¿Reiniciar TODO? (módulos, sprintboard, retros, daily, bloqueos)')) return;
+  ['scrum_done','scrum_notes','scrum_quiz','scrum_checks','scrum_fields','scrum_board','scrum_dailies','scrum_retros','scrum_blocks','scrum_deps'].forEach(k=>localStorage.removeItem(k));
+  location.reload();
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('next-btn').onclick=nextModule;
+  document.getElementById('prev-btn').onclick=prevModule;
+  document.getElementById('mark-done').onclick=markDone;
+  ensureBoard();
+  ensureDeps();
+  renderSidebar();
+  renderModule(STATE.current);
+  updateProjectLight();
+});
+
+function moduleHeader(m){
+  const blockTitle = BLOCKS.find(b=>b.id===m.block).title.split('·')[1].trim();
+  return `
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-xs mono muted">Módulo ${m.num} · ${blockTitle}</div>
+      ${badge(m.level)}
+    </div>
+    <h1 class="text-3xl font-semibold mb-1 tracking-tight">${m.title}</h1>
+    <div class="h-px bg-[var(--border)] my-6"></div>`;
+}
+function notesPanel(id){
+  const val=(STATE.notes[id]||'').replace(/</g,'&lt;');
+  return `
+    <div class="panel p-4 mt-8">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-sm">📝 Mis notas</span>
+        <span class="text-[10px] muted">(autoguardado)</span>
+      </div>
+      <textarea oninput="STATE.notes['${id}']=this.value;saveState();" placeholder="Notas sobre este módulo..."
+        class="w-full bg-[var(--surface2)] border border-[var(--border)] rounded p-3 text-sm font-mono"
+        style="min-height:80px;resize:vertical;">${val}</textarea>
+    </div>`;
+}
+function renderModule(id){
+  const m=MODULES.find(x=>x.id===id);
+  if(!m) return;
+  const out=document.getElementById('module-content');
+  out.classList.remove('fade-in'); void out.offsetWidth; out.classList.add('fade-in');
+  out.innerHTML = MOD_BODY[id](m) + notesPanel(id);
+  if(MOD_AFTER[id]) MOD_AFTER[id]();
+}
+
+const MOD_BODY={}; const MOD_AFTER={};
+
+function teamBadge(t){
+  const map = {hw:['Hardware','team-hw','🔧'], sw:['Software','team-sw','💻'], com:['Comunicación','team-com','🎪'], scrum:['Scrum','team-scrum','⚙️']};
+  const [n,c,e] = map[t] || ['?','chip',''];
+  return `<span class="chip ${c}">${e} ${n}</span>`;
+}
+function prioBadge(p){
+  return `<span class="chip prio-${p==='alta'?'high':p==='media'?'med':'low'}">${p==='alta'?'🔴':p==='media'?'🟡':'🟢'} ${p}</span>`;
+}
+
+/* ====== Pre-loaded backlog (stories from all 3 teams) ====== */
+const DEFAULT_STORIES = [
+  // HARDWARE
+  {id:'h1', team:'hw', sprint:1, prio:'alta', title:'Identificar componentes y armar lista de materiales',
+    crit:'Lista impresa con cantidades, todo en una caja del laboratorio', col:'todo', who:'', estim:3, blocked:false},
+  {id:'h2', team:'hw', sprint:1, prio:'alta', title:'Conectar sensor de humedad al Arduino',
+    crit:'Sensor da lecturas estables entre 0-1023 en el Serial Monitor', col:'todo', who:'', estim:5, blocked:false},
+  {id:'h3', team:'hw', sprint:2, prio:'alta', title:'Conectar módulo relé + bomba',
+    crit:'Bomba se enciende y apaga desde el Arduino con un blink test', col:'todo', who:'', estim:5, blocked:false},
+  {id:'h4', team:'hw', sprint:2, prio:'alta', title:'Integrar sensor + relé + bomba en sketch único',
+    crit:'Bomba se activa cuando humedad < umbral, 30 min sin reiniciar', col:'todo', who:'', estim:8, blocked:false},
+  {id:'h5', team:'hw', sprint:3, prio:'media', title:'Definir formato del dato serial (CSV inline)',
+    crit:'Acuerdo documentado con Software, prueba con ambos lados', col:'todo', who:'', estim:2, blocked:false},
+  {id:'h6', team:'hw', sprint:4, prio:'alta', title:'Pasaje a batería + caja final',
+    crit:'Sistema corre 1h con batería en la caja cerrada', col:'todo', who:'', estim:5, blocked:false},
+
+  // SOFTWARE
+  {id:'s1', team:'sw', sprint:1, prio:'alta', title:'Instalar Mu Editor + librerías (pandas, matplotlib)',
+    crit:'import pandas as pd sin error en todos los integrantes del team', col:'todo', who:'', estim:2, blocked:false},
+  {id:'s2', team:'sw', sprint:1, prio:'alta', title:'Generar CSV demo y guardar como datos_demo.csv',
+    crit:'Archivo con 50 filas en proyecto_riego/', col:'todo', who:'', estim:2, blocked:false},
+  {id:'s3', team:'sw', sprint:2, prio:'alta', title:'Script 1 — EDA básico con datos demo',
+    crit:'df.head, df.describe, df.info corren sin error', col:'todo', who:'', estim:3, blocked:false},
+  {id:'s4', team:'sw', sprint:2, prio:'alta', title:'Script 2 — Limpieza de datos',
+    crit:'datos_limpios.csv generado, sin nulos, sin outliers', col:'todo', who:'', estim:3, blocked:false},
+  {id:'s5', team:'sw', sprint:3, prio:'alta', title:'Script 3 — 3 gráficos con matplotlib',
+    crit:'3 PNGs en carpeta graficos/: línea, barras, scatter', col:'todo', who:'', estim:5, blocked:false},
+  {id:'s6', team:'sw', sprint:3, prio:'media', title:'Adaptar lectura al formato real del Arduino',
+    crit:'Script real lee y guarda CSV en tiempo real',
+    col:'todo', who:'', estim:5, blocked:true, blockReason:'Espera formato de Hardware (h5)'},
+  {id:'s7', team:'sw', sprint:4, prio:'alta', title:'Dashboard en tiempo real con animation',
+    crit:'Gráfico se actualiza cada 1s, alta calidad para video', col:'todo', who:'', estim:8, blocked:false},
+
+  // COMUNICACIÓN
+  {id:'c1', team:'com', sprint:1, prio:'alta', title:'Definir nombre + eslogan del proyecto',
+    crit:'Consenso del equipo, escrito en el Módulo 1.3 de Comunicación', col:'todo', who:'', estim:2, blocked:false},
+  {id:'c2', team:'com', sprint:1, prio:'media', title:'Tomar primeras 3 fotos del proceso',
+    crit:'Fotos en carpeta compartida', col:'todo', who:'', estim:3, blocked:false},
+  {id:'c3', team:'com', sprint:2, prio:'alta', title:'Borrador del afiche en plantilla',
+    crit:'7 zonas del afiche completas', col:'todo', who:'', estim:5, blocked:false},
+  {id:'c4', team:'com', sprint:2, prio:'media', title:'Filmar Actos 1 y 2 del video',
+    crit:'Clips guardados en celular designado', col:'todo', who:'', estim:3, blocked:false},
+  {id:'c5', team:'com', sprint:3, prio:'alta', title:'Editar video en CapCut (5 actos)',
+    crit:'Duración 3-5 min, exportado 1080p', col:'todo', who:'', estim:8,
+    blocked:true, blockReason:'Espera demo de Software (s7) y fotos finales de Hardware'},
+  {id:'c6', team:'com', sprint:3, prio:'alta', title:'Subir video a YouTube + generar QR',
+    crit:'URL guardada, QR probado con 3 celulares', col:'todo', who:'', estim:2, blocked:false},
+  {id:'c7', team:'com', sprint:4, prio:'alta', title:'Afiche impreso (A2) y stand armado',
+    crit:'Foto del stand armado + cartelitos pegados', col:'todo', who:'', estim:5, blocked:false},
+  {id:'c8', team:'com', sprint:4, prio:'alta', title:'Ensayar presentación oral 2 veces cronometradas',
+    crit:'Todos los integrantes del proyecto participan', col:'todo', who:'', estim:3, blocked:false},
+];
+function ensureBoard(){
+  if(!STATE.board){
+    STATE.board = JSON.parse(JSON.stringify(DEFAULT_STORIES));
+    saveState();
+  }
+}
+function findStory(id){ return STATE.board.find(s=>s.id===id); }
+
+const DEFAULT_DEPS = [
+  {id:'d1', from:'hw', to:'sw', what:'Formato del dato serial (CSV inline)', target:'Sprint 3', status:'pending'},
+  {id:'d2', from:'hw', to:'com', what:'Fotos del sistema armado', target:'Sprint 2', status:'pending'},
+  {id:'d3', from:'sw', to:'com', what:'Captura del gráfico final para el afiche', target:'Sprint 3', status:'pending'},
+  {id:'d4', from:'sw', to:'com', what:'Demo del dashboard corriendo para filmar', target:'Sprint 3', status:'pending'},
+  {id:'d5', from:'sw', to:'hw', what:'Confirmación del umbral de humedad para el código', target:'Sprint 2', status:'pending'},
+  {id:'d6', from:'hw', to:'com', what:'Arduino disponible para filmar y stand', target:'Sprint 3', status:'pending'},
+];
+function ensureDeps(){
+  if(!STATE.deps){ STATE.deps = JSON.parse(JSON.stringify(DEFAULT_DEPS)); saveState(); }
+}
+
+function updateProjectLight(){
+  // Simple status logic
+  const total = (STATE.board||[]).length || 1;
+  const done = (STATE.board||[]).filter(s=>s.col==='done').length;
+  const activeBlocks = (STATE.blocks||[]).filter(b=>b.status==='active').length;
+  const blockedStories = (STATE.board||[]).filter(s=>s.blocked).length;
+  let color='green', msg='Todo en orden';
+  if(activeBlocks >= 3 || blockedStories >= 3){ color='red'; msg='⚠️ Muchos bloqueos — revisar Retro'; }
+  else if(activeBlocks >= 1 || blockedStories >= 1){ color='yellow'; msg='Atención: hay bloqueos'; }
+  const lights = {green:'light-green',yellow:'light-yellow',red:'light-red'};
+  const labels = {green:'🟢 Verde',yellow:'🟡 Amarillo',red:'🔴 Rojo'};
+  const headEl = document.getElementById('proj-light');
+  if(headEl) headEl.innerHTML = `<span class="${lights[color]}"></span> Semáforo: <strong>${labels[color]}</strong>`;
+  const sEl = document.getElementById('proj-status');
+  if(sEl) sEl.innerHTML = `<span class="${lights[color]}"></span> <strong>${labels[color]}</strong>`;
+  const mEl = document.getElementById('proj-status-msg');
+  if(mEl) mEl.textContent = `${done}/${total} tareas hechas · ${activeBlocks} bloqueos activos`;
+}
+
+/* ============ M 1.1 ============ */
+MOD_BODY['m1.1'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Scrum es una forma de organizar el trabajo en equipo. <strong>Adaptado a la escuela</strong>, sin burocracia corporativa pero respetando el espíritu.</p>
+
+<!-- Sin vs Con Scrum -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+  <div class="panel p-5">
+    <div class="text-xs mb-2" style="color:#ff7788">✗ SIN SCRUM</div>
+    <svg viewBox="0 0 200 100" class="w-full mb-3" style="background:#1a0a0a;border-radius:4px;">
+      <text x="20" y="30" fill="#ff7788" font-size="14" font-family="monospace">caos</text>
+      ${Array.from({length:8},(_,i)=>{
+        const x1=20+Math.random()*160, y1=20+Math.random()*60, x2=20+Math.random()*160, y2=20+Math.random()*60;
+        return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#ff7788" stroke-width="1" opacity=".5"/>`;
+      }).join('')}
+    </svg>
+    <ul class="text-xs muted space-y-1.5">
+      <li>• Nadie sabe qué está haciendo el otro</li>
+      <li>• Se duplica el trabajo</li>
+      <li>• Aparecen sorpresas al final</li>
+      <li>• El team que más sabe carga todo</li>
+    </ul>
+  </div>
+  <div class="panel p-5" style="border-color:#36306b;">
+    <div class="text-xs scrum mb-2">✓ CON SCRUM</div>
+    <svg viewBox="0 0 200 100" class="w-full mb-3" style="background:#1a1428;border-radius:4px;">
+      <text x="20" y="30" fill="#a78bfa" font-size="14" font-family="monospace">flujo ordenado</text>
+      <line x1="20" y1="60" x2="60" y2="60" stroke="#a78bfa" stroke-width="2"/>
+      <line x1="60" y1="60" x2="100" y2="60" stroke="#a78bfa" stroke-width="2"/>
+      <line x1="100" y1="60" x2="140" y2="60" stroke="#a78bfa" stroke-width="2"/>
+      <line x1="140" y1="60" x2="180" y2="60" stroke="#a78bfa" stroke-width="2"/>
+      <circle cx="40" cy="60" r="6" fill="#a78bfa"/><circle cx="80" cy="60" r="6" fill="#a78bfa"/>
+      <circle cx="120" cy="60" r="6" fill="#a78bfa"/><circle cx="160" cy="60" r="6" fill="#a78bfa"/>
+    </svg>
+    <ul class="text-xs muted space-y-1.5">
+      <li>• Todos saben qué hace cada uno</li>
+      <li>• Las dependencias se ven antes</li>
+      <li>• Los bloqueos se resuelven rápido</li>
+      <li>• Llegamos a la feria sin sprint final caótico</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Adaptación escolar -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-3">SCRUM ADAPTADO A LA ESCUELA</div>
+  <table class="bk">
+    <thead><tr><th>En la industria</th><th>En este proyecto</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Product Owner + cliente real</strong></td><td>🎯 La <strong class="scrum">feria de ciencias</strong> es el cliente. El docente puede ayudar a priorizar.</td></tr>
+      <tr><td><strong>Backlog de producto</strong></td><td>📋 Lista de todo lo que hay que hacer hasta la feria</td></tr>
+      <tr><td><strong>Sprints de 2-4 semanas</strong></td><td>📅 Una semana de clases = un Sprint</td></tr>
+      <tr><td><strong>Estimaciones en story points</strong></td><td>🎲 Estimación rápida (1, 2, 3, 5, 8 — ver Módulo 4.2)</td></tr>
+      <tr><td><strong>Scrum Master full-time</strong></td><td>⚙️ El team Scrum facilita en clase y entre clases (WhatsApp)</td></tr>
+      <tr><td><strong>Dev Teams</strong></td><td>🔧 Hardware · 💻 Software · 🎪 Comunicación</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 3 pilares -->
+<div class="text-xs mono muted mb-3">LOS 3 PILARES DE SCRUM</div>
+<div class="grid grid-cols-3 gap-3 mb-6">
+  ${[
+    {ic:'🔍',n:'Transparencia',a:'Todos saben qué está haciendo cada uno. Como un pizarrón visible para todo el equipo.',e:'Sprintboard siempre actualizado'},
+    {ic:'🧪',n:'Inspección',a:'Revisamos el avance cada semana. ¿Estamos bien? ¿Llegamos a la feria?',e:'Sprint Review semanal'},
+    {ic:'🔄',n:'Adaptación',a:'Si algo no funciona, lo cambiamos. No esperamos a la feria para darnos cuenta.',e:'Retro al final del Sprint'},
+  ].map(p=>`
+    <div class="panel p-4">
+      <div style="font-size:28px" class="mb-2">${p.ic}</div>
+      <div class="font-semibold scrum mb-1">${p.n}</div>
+      <div class="text-xs muted mb-3">${p.a}</div>
+      <div class="text-[11px] panel-2 p-2 rounded">📌 ${p.e}</div>
+    </div>
+  `).join('')}
+</div>
+
+<div class="panel p-4" style="background:#1a1428;">
+  <div class="text-sm">💡 <strong class="scrum">Idea clave:</strong> Scrum no es para <em>controlar</em>. Es para <em>ayudar</em>. El team Scrum no manda — facilita, desbloquea, coordina.</div>
+</div>
+`;
+
+/* ============ M 1.2 ============ */
+MOD_BODY['m1.2'] = (m) => `
+${moduleHeader(m)}
+
+<!-- Organigrama del proyecto -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-4">ORGANIGRAMA DEL PROYECTO</div>
+  <svg viewBox="0 0 600 380" class="w-full" style="max-width:560px;display:block;margin:0 auto;">
+    <!-- center: feria -->
+    <circle cx="300" cy="190" r="65" fill="#1a1428" stroke="#a78bfa" stroke-width="2"/>
+    <text x="300" y="180" text-anchor="middle" fill="#a78bfa" font-size="13" font-weight="700" font-family="monospace">🎯 FERIA</text>
+    <text x="300" y="200" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">(meta)</text>
+    
+    <!-- Hardware top-left -->
+    <line x1="300" y1="190" x2="120" y2="80" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <rect x="40" y="40" width="160" height="80" rx="8" fill="#1a0d05" stroke="#f97316"/>
+    <text x="120" y="68" text-anchor="middle" fill="#ffb074" font-size="14" font-weight="700">🔧 Hardware</text>
+    <text x="120" y="90" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">arma circuitos</text>
+    <text x="120" y="105" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">prueba sensores</text>
+    
+    <!-- Software top-right -->
+    <line x1="300" y1="190" x2="480" y2="80" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <rect x="400" y="40" width="160" height="80" rx="8" fill="#082548" stroke="#3b82f6"/>
+    <text x="480" y="68" text-anchor="middle" fill="#7bb5ff" font-size="14" font-weight="700">💻 Software</text>
+    <text x="480" y="90" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">datos en Python</text>
+    <text x="480" y="105" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">gráficos + dashboard</text>
+    
+    <!-- Comunicación bottom -->
+    <line x1="300" y1="190" x2="300" y2="320" stroke="#ff6b35" stroke-width="1.5" stroke-dasharray="4 4"/>
+    <rect x="220" y="290" width="160" height="80" rx="8" fill="#3a1a08" stroke="#ff6b35"/>
+    <text x="300" y="318" text-anchor="middle" fill="#ff9b6b" font-size="14" font-weight="700">🎪 Comunicación</text>
+    <text x="300" y="340" text-anchor="middle" fill="#888" font-size="10" font-family="monospace">afiche · video · stand</text>
+    
+    <!-- Scrum bottom -->
+    <line x1="300" y1="190" x2="40" y2="340" stroke="#a78bfa" stroke-width="2"/>
+    <line x1="300" y1="190" x2="560" y2="340" stroke="#a78bfa" stroke-width="2"/>
+    <line x1="120" y1="80" x2="40" y2="320" stroke="#a78bfa" stroke-width="1" opacity=".4"/>
+    <line x1="480" y1="80" x2="560" y2="320" stroke="#a78bfa" stroke-width="1" opacity=".4"/>
+    <line x1="300" y1="290" x2="100" y2="345" stroke="#a78bfa" stroke-width="1" opacity=".4"/>
+    <line x1="300" y1="290" x2="500" y2="345" stroke="#a78bfa" stroke-width="1" opacity=".4"/>
+    
+    <rect x="20" y="320" width="100" height="50" rx="8" fill="#1a1428" stroke="#a78bfa"/>
+    <text x="70" y="340" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="700">⚙️ Scrum</text>
+    <text x="70" y="357" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">facilita</text>
+    
+    <rect x="480" y="320" width="100" height="50" rx="8" fill="#1a1428" stroke="#a78bfa"/>
+    <text x="530" y="340" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="700">⚙️ Scrum</text>
+    <text x="530" y="357" text-anchor="middle" fill="#888" font-size="9" font-family="monospace">coordina</text>
+  </svg>
+  <div class="text-[11px] muted text-center mt-2">El team Scrum se conecta con todos. No es jefe — es nexo.</div>
+</div>
+
+<!-- Qué hace / no hace -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+  <div class="panel p-5" style="border-color:#36306b;">
+    <div class="text-xs scrum mb-3 font-semibold">✓ QUÉ HACE el Scrum Master</div>
+    <ul class="text-sm space-y-2">
+      <li class="flex gap-2"><span class="scrum">✓</span><span>Facilita el Daily y la Retro</span></li>
+      <li class="flex gap-2"><span class="scrum">✓</span><span>Actualiza el Sprintboard junto al team</span></li>
+      <li class="flex gap-2"><span class="scrum">✓</span><span>Detecta bloqueos y ayuda a resolverlos</span></li>
+      <li class="flex gap-2"><span class="scrum">✓</span><span>Comunica entre teams cuando hay dependencias</span></li>
+      <li class="flex gap-2"><span class="scrum">✓</span><span>Cuida el ritmo (ni muy relajado, ni final caótico)</span></li>
+      <li class="flex gap-2"><span class="scrum">✓</span><span>Protege al equipo de distracciones externas</span></li>
+    </ul>
+  </div>
+  <div class="panel p-5">
+    <div class="text-xs mb-3 font-semibold" style="color:#ff7788">✗ QUÉ NO HACE</div>
+    <ul class="text-sm space-y-2">
+      <li class="flex gap-2" style="color:#ff7788"><span>✗</span><span>No manda a nadie</span></li>
+      <li class="flex gap-2" style="color:#ff7788"><span>✗</span><span>No decide qué se construye</span></li>
+      <li class="flex gap-2" style="color:#ff7788"><span>✗</span><span>No hace el trabajo de los otros teams</span></li>
+      <li class="flex gap-2" style="color:#ff7788"><span>✗</span><span>No castiga por no terminar una tarea</span></li>
+      <li class="flex gap-2" style="color:#ff7788"><span>✗</span><span>No "reporta" al docente sobre quién no trabajó</span></li>
+      <li class="flex gap-2" style="color:#ff7788"><span>✗</span><span>No micromaneja</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- Analogía -->
+<div class="panel p-6" style="background:#1a1428;border-color:#36306b;">
+  <div class="text-xs mono muted mb-2">ANALOGÍA</div>
+  <div class="text-lg mb-3">El Scrum Master es como el <strong class="scrum">árbitro de un partido</strong>:</div>
+  <div class="grid grid-cols-3 gap-3 text-sm">
+    <div class="panel-2 p-3"><div class="scrum mb-1">⚽ Hace que el juego fluya</div><div class="muted text-xs">Marca el ritmo, las pausas, las reglas.</div></div>
+    <div class="panel-2 p-3"><div class="scrum mb-1">🚫 No mete goles</div><div class="muted text-xs">No juega — los teams juegan. El árbitro <em>facilita</em>.</div></div>
+    <div class="panel-2 p-3"><div class="scrum mb-1">⚖️ Resuelve conflictos</div><div class="muted text-xs">Cuando hay roces entre teams, ayuda a destrabarlos.</div></div>
+  </div>
+  <p class="text-[12px] muted mt-3"><strong class="scrum">"Servant leader"</strong> es el término técnico: un líder que <em>sirve</em> al equipo, no al revés.</p>
+</div>
+`;
+
+/* ============ M 1.3 Backlog ============ */
+MOD_BODY['m1.3'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">El <strong>Backlog</strong> es la lista de TODO lo que hay que hacer para llegar a la feria. Está pre-cargado con las historias de los 3 teams. Vos lo mantenés actualizado.</p>
+
+<!-- Epics -->
+<div class="grid grid-cols-2 gap-3 mb-6">
+  ${[
+    ['🔧 Hardware funcionando','El sistema enciende la bomba cuando humedad < umbral, lectura cada 5s, 30 min sin reiniciarse.'],
+    ['💻 Software funcionando','CSV generado del Arduino real, gráficos exportados, dashboard en vivo.'],
+    ['🎪 Comunicación lista','Afiche impreso con QR, video en YouTube, stand armado, cartelitos.'],
+    ['🎤 Presentación','Todos saben explicar el sistema en 2 min, presentación ensayada 2 veces.'],
+  ].map(e=>`
+    <div class="panel p-4"><div class="font-semibold text-sm mb-1">${e[0]}</div><div class="text-xs muted">${e[1]}</div></div>
+  `).join('')}
+</div>
+
+<!-- Backlog table -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">BACKLOG · ${STATE.board.length} HISTORIAS</div>
+    <div class="flex gap-2">
+      <select id="bk-team" class="bg-[var(--surface2)] border border-[var(--border)] rounded px-2 py-1 text-xs" onchange="renderBacklog()">
+        <option value="all">Todos</option>
+        <option value="hw">🔧 Hardware</option>
+        <option value="sw">💻 Software</option>
+        <option value="com">🎪 Comunicación</option>
+      </select>
+      <select id="bk-prio" class="bg-[var(--surface2)] border border-[var(--border)] rounded px-2 py-1 text-xs" onchange="renderBacklog()">
+        <option value="all">Todas las prioridades</option>
+        <option value="alta">Alta</option>
+        <option value="media">Media</option>
+        <option value="baja">Baja</option>
+      </select>
+      <button class="btn btn-accent text-xs" onclick="addStoryModal()">+ Historia</button>
+      <button class="btn text-xs" onclick="exportBacklog()">📋 Exportar</button>
+    </div>
+  </div>
+
+  <div id="backlog-table"></div>
+</div>
+
+<div class="panel p-4" style="background:#1a1428;">
+  <div class="text-sm">💡 <strong class="scrum">Tip:</strong> el Backlog NO es inmutable. Cuando aparece algo nuevo (idea, cambio de alcance), se agrega acá y se prioriza. Las historias en "Hecho" no se borran — se mantienen como registro.</div>
+</div>
+`;
+MOD_AFTER['m1.3'] = () => renderBacklog();
+function renderBacklog(){
+  const team = document.getElementById('bk-team')?.value || 'all';
+  const prio = document.getElementById('bk-prio')?.value || 'all';
+  const t = document.getElementById('backlog-table');
+  if(!t) return;
+  const list = STATE.board.filter(s=>(team==='all'||s.team===team) && (prio==='all'||s.prio===prio));
+  t.innerHTML = `<table class="bk">
+    <thead><tr><th>Prio</th><th>Team</th><th>Sprint</th><th>Historia</th><th>Estim.</th><th>Estado</th></tr></thead>
+    <tbody>${list.map(s=>`
+      <tr style="cursor:pointer;" onclick="openStoryModal('${s.id}')">
+        <td>${prioBadge(s.prio)}</td>
+        <td>${teamBadge(s.team)}</td>
+        <td class="mono accent">S${s.sprint}</td>
+        <td>
+          <div>${s.title}</div>
+          <div class="text-[10px] muted mt-1">✓ ${s.crit}</div>
+          ${s.blocked?`<div class="text-[10px]" style="color:#ff7788">🚫 ${s.blockReason||'Bloqueado'}</div>`:''}
+        </td>
+        <td class="mono scrum text-center">${s.estim}</td>
+        <td><span class="chip" style="font-size:10px;">${{todo:'📋 Por hacer',doing:'🔄 En progreso',review:'👁️ Revisión',done:'✅ Hecho'}[s.col]}</span></td>
+      </tr>
+    `).join('')}</tbody>
+  </table>`;
+}
+function addStoryModal(){
+  const title = prompt('Título de la historia:'); if(!title) return;
+  const team = prompt('Team (hw / sw / com):','sw'); if(!['hw','sw','com'].includes(team)) return toast('Team inválido');
+  const prio = prompt('Prioridad (alta / media / baja):','media');
+  const sprint = parseInt(prompt('Sprint (1-4):','1'))||1;
+  const crit = prompt('Criterio de aceptación:','...');
+  const estim = parseInt(prompt('Estimación en puntos (1, 2, 3, 5, 8, 13):','3'))||3;
+  const id = 'x'+Date.now();
+  STATE.board.push({id, team, sprint, prio, title, crit, col:'todo', who:'', estim, blocked:false});
+  saveState(); renderBacklog(); toast('+ Historia agregada');
+}
+function openStoryModal(id){
+  const s = findStory(id); if(!s) return;
+  const modal = document.getElementById('story-modal');
+  modal.classList.remove('hidden'); modal.classList.add('flex');
+  document.getElementById('story-modal-body').innerHTML = `
+    <div class="flex flex-wrap items-center gap-2 mb-3">${teamBadge(s.team)} ${prioBadge(s.prio)} <span class="chip mono">Sprint ${s.sprint}</span> <span class="chip mono scrum">${s.estim} pts</span></div>
+    <h3 class="text-base font-semibold mb-3">${s.title}</h3>
+    <div class="panel-2 p-3 mb-3 text-xs"><span class="muted">Criterio:</span> ✓ <em>${s.crit}</em></div>
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <div>
+        <label class="text-xs muted">¿Quién lo tiene?</label>
+        <input type="text" value="${s.who||''}" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mono mt-1"
+          oninput="findStory('${s.id}').who=this.value;saveState();"/>
+      </div>
+      <div>
+        <label class="text-xs muted">Estado</label>
+        <select class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1"
+          onchange="findStory('${s.id}').col=this.value;saveState();renderBacklog();if(window._refreshBoard)_refreshBoard();updateProjectLight();">
+          <option value="todo" ${s.col==='todo'?'selected':''}>📋 Por hacer</option>
+          <option value="doing" ${s.col==='doing'?'selected':''}>🔄 En progreso</option>
+          <option value="review" ${s.col==='review'?'selected':''}>👁️ En revisión</option>
+          <option value="done" ${s.col==='done'?'selected':''}>✅ Hecho</option>
+        </select>
+      </div>
+    </div>
+    <label class="text-xs muted flex items-center gap-2 mb-1">
+      <input type="checkbox" ${s.blocked?'checked':''} class="accent-[var(--scrum)]"
+        onchange="findStory('${s.id}').blocked=this.checked;saveState();renderBacklog();if(window._refreshBoard)_refreshBoard();updateProjectLight();"/>
+      Bloqueada
+    </label>
+    <input type="text" value="${s.blockReason||''}" placeholder="¿Por qué está bloqueada?"
+      class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-xs mono mt-1"
+      oninput="findStory('${s.id}').blockReason=this.value;saveState();"/>
+    <div class="flex justify-between mt-4">
+      <button class="btn text-xs" style="border-color:#551122;color:#ff7788;" onclick="deleteStory('${s.id}')">🗑 Eliminar</button>
+      <button class="btn" onclick="closeStoryModal()">Cerrar</button>
+    </div>
+  `;
+}
+function closeStoryModal(){ document.getElementById('story-modal').classList.add('hidden'); document.getElementById('story-modal').classList.remove('flex'); }
+function deleteStory(id){
+  if(!confirm('¿Eliminar esta historia?')) return;
+  STATE.board = STATE.board.filter(s=>s.id!==id);
+  saveState(); renderBacklog(); closeStoryModal(); if(window._refreshBoard)_refreshBoard(); updateProjectLight();
+}
+function exportBacklog(){
+  const teams = {hw:'Hardware',sw:'Software',com:'Comunicación'};
+  let t = `BACKLOG DEL PROYECTO — ${new Date().toLocaleDateString('es-AR')}\n${'═'.repeat(60)}\n\n`;
+  ['alta','media','baja'].forEach(p=>{
+    const items = STATE.board.filter(s=>s.prio===p);
+    if(!items.length) return;
+    t += `🔥 PRIORIDAD ${p.toUpperCase()}\n`;
+    items.forEach(s=> t += `  [${teams[s.team]}|S${s.sprint}|${s.estim}pts] ${s.title}\n    ✓ ${s.crit}\n`);
+    t += '\n';
+  });
+  copyText(t);
+}
+
+/* ============ M 1.4 quiz ============ */
+const QUIZ_14 = [
+  { q:'¿Cuál es el principal rol del team Scrum?', opts:[
+    'Hacer el trabajo más difícil',
+    'Controlar que los otros teams cumplan',
+    'Facilitar, desbloquear y coordinar — no hacer ni mandar',
+    'Reemplazar al docente'], correct:2,
+    exp:'Servant leader: ayuda al equipo a funcionar mejor, no manda ni hace.'},
+  { q:'Los 3 pilares de Scrum son:', opts:[
+    'Velocidad, eficiencia, perfección',
+    'Transparencia, inspección, adaptación',
+    'Planificación, ejecución, presentación',
+    'Liderazgo, autoridad, control'], correct:1,
+    exp:'Transparencia (ver todo), inspección (revisar avance), adaptación (cambiar lo que no funciona).'},
+  { q:'En este proyecto, ¿qué dura un Sprint?', opts:[
+    '1 día','1 semana de clases','1 mes','Hasta la feria'], correct:1,
+    exp:'Una semana de clases = un Sprint. Suficiente para ver avance sin perder ritmo.'},
+  { q:'Si Software no puede avanzar porque espera el formato de Hardware, eso es:', opts:[
+    'Una excusa','Una dependencia que el Scrum Master debe visibilizar','Un problema personal','Un retraso permitido'], correct:1,
+    exp:'Es una dependencia. El Scrum Master la registra y ayuda a coordinarse.'},
+  { q:'¿Qué hace el Scrum Master si un team no terminó su tarea?', opts:[
+    'Lo reporta al docente','Le castiga al equipo','Pregunta en la Retro por qué pasó y cómo mejorar','Hace la tarea él'], correct:2,
+    exp:'La Retro es para mejorar el proceso, no para culpar. ¿Hubo bloqueos? ¿Se sobre-estimó?'},
+];
+MOD_BODY['m1.4'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">5 preguntas conceptuales sobre Scrum escolar.</p>
+<div id="quiz-14">
+  ${QUIZ_14.map((qq,i)=>`
+    <div class="panel p-5 mb-4" data-qidx="${i}">
+      <div class="flex items-center gap-2 mb-3"><span class="chip mono">Pregunta ${i+1}</span></div>
+      <div class="mb-3 text-sm">${qq.q}</div>
+      <div class="space-y-2">
+        ${qq.opts.map((o,j)=>`
+          <div class="quiz-opt" data-opt="${j}" onclick="answerQuiz('q14',${i},${j})">
+            <span class="mono muted">${'abcd'[j]})</span>
+            <span>${o}</span>
+          </div>`).join('')}
+      </div>
+      <div class="explain mt-3 text-xs muted hidden">${qq.exp}</div>
+    </div>
+  `).join('')}
+</div>
+<div class="panel p-5" style="background:#1a1428;border-color:#36306b;">
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="text-xs muted">Puntaje</div>
+      <div class="mono text-3xl scrum" id="score-14">0 / 5</div>
+    </div>
+    <button class="btn" onclick="reviewQuiz('q14')">Reiniciar</button>
+  </div>
+</div>
+`;
+function answerQuiz(quizId, qi, oj){
+  STATE.quiz[quizId] = STATE.quiz[quizId] || {};
+  if(STATE.quiz[quizId][qi] !== undefined) return;
+  const QQ = {q14:QUIZ_14, qfinal:QUIZ_FINAL}[quizId];
+  const correct = QQ[qi].correct;
+  STATE.quiz[quizId][qi] = oj;
+  saveState();
+  const panel = document.querySelector(`[data-qidx="${qi}"]`);
+  panel.querySelectorAll('.quiz-opt').forEach((el,idx)=>{
+    el.classList.add('disabled');
+    if(idx===correct) el.classList.add('correct');
+    if(idx===oj && idx!==correct) el.classList.add('wrong');
+  });
+  panel.querySelector('.explain').classList.remove('hidden');
+  const score = Object.entries(STATE.quiz[quizId]).filter(([k,v])=> v===QQ[k].correct).length;
+  const elScore = document.getElementById({q14:'score-14',qfinal:'score-final'}[quizId]);
+  if(elScore) elScore.textContent = score+' / '+QQ.length;
+}
+function reviewQuiz(quizId){ STATE.quiz[quizId]={}; saveState(); renderModule(STATE.current); }
+
+/* ============ M 2.1 Sprint ============ */
+MOD_BODY['m2.1'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Un <strong>Sprint</strong> es un período fijo de trabajo. Acá, una semana de clases.</p>
+
+<!-- Ciclo del Sprint -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-3">EL CICLO DEL SPRINT</div>
+  <div class="grid grid-cols-4 gap-3">
+    ${[
+      ['📅','Sprint Planning','LUNES','Qué vamos a hacer esta semana. 30 min máx.'],
+      ['☀️','Daily Standup','TODOS LOS DÍAS','3 preguntas, 15 min máx, todos parados.'],
+      ['🎬','Sprint Review','VIERNES','Mostrar lo que se terminó. Demo en vivo.'],
+      ['🔄','Retrospectiva','VIERNES (después de Review)','Qué mejorar para la próxima.'],
+    ].map(c=>`
+      <div class="panel-2 p-4 text-center">
+        <div style="font-size:32px" class="mb-2">${c[0]}</div>
+        <div class="font-semibold text-sm mb-1">${c[1]}</div>
+        <div class="text-[10px] scrum mb-2 mono">${c[2]}</div>
+        <div class="text-[11px] muted">${c[3]}</div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+
+<!-- Timeline configurable -->
+<div class="panel p-6 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">CALENDARIO DE SPRINTS</div>
+    <div class="flex items-center gap-2">
+      <label class="text-xs muted">Fecha de la feria:</label>
+      <input id="feria-date" type="date" value="${getField('feria_date','2024-11-15')}"
+        oninput="setField('feria_date',this.value);renderTimeline();"
+        class="bg-[var(--bg)] border border-[var(--border)] rounded p-1 text-xs"/>
+    </div>
+  </div>
+  <div id="timeline" class="space-y-2"></div>
+</div>
+
+<div class="panel p-4" style="background:#1a1428;">
+  <div class="text-sm">🔴 <strong>Zona de congelamiento:</strong> los últimos 2 Sprints antes de la feria. No se agregan features nuevas. Solo se termina, se pule, se ensaya. Si algo grande no entró antes, ya no entra.</div>
+</div>
+`;
+MOD_AFTER['m2.1'] = () => renderTimeline();
+function renderTimeline(){
+  const el = document.getElementById('timeline'); if(!el) return;
+  const feriaStr = getField('feria_date','2024-11-15');
+  const feria = new Date(feriaStr);
+  const today = new Date();
+  let html = '';
+  // 4 sprints distributed back from feria
+  for(let i=4;i>=1;i--){
+    const sprintEnd = new Date(feria); sprintEnd.setDate(sprintEnd.getDate() - (4-i)*7);
+    const sprintStart = new Date(sprintEnd); sprintStart.setDate(sprintStart.getDate() - 6);
+    const stories = STATE.board.filter(s=>s.sprint===i);
+    const done = stories.filter(s=>s.col==='done').length;
+    const pct = stories.length? Math.round(done/stories.length*100) : 0;
+    const isPast = sprintEnd < today;
+    const isCurrent = today >= sprintStart && today <= sprintEnd;
+    const isFreeze = i>=3;
+    html += `<div class="panel-2 p-4" style="${isCurrent?'border-color:var(--scrum);':''}">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-3">
+          <div class="mono scrum text-lg font-bold">S${i}</div>
+          <div>
+            <div class="text-sm font-semibold">${i===4?'Sprint final · semana de la feria':'Sprint '+i}</div>
+            <div class="text-[10px] muted mono">${sprintStart.toLocaleDateString('es-AR')} → ${sprintEnd.toLocaleDateString('es-AR')}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-3">
+          ${isFreeze?'<span class="chip prio-high">🔴 Zona de congelamiento</span>':''}
+          ${isCurrent?'<span class="chip" style="background:#1a1428;color:var(--scrum);border-color:var(--scrum);">⚡ Sprint actual</span>':''}
+          ${isPast?'<span class="chip muted">Pasado</span>':''}
+          <div class="text-right">
+            <div class="text-xs scrum mono">${done}/${stories.length} (${pct}%)</div>
+            <div class="progress-bar mt-1" style="width:140px"><div style="width:${pct}%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+  el.innerHTML = html;
+}
+
+/* ============ M 2.2 Daily ============ */
+MOD_BODY['m2.2'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6"><strong>15 minutos máximo. Todos parados.</strong> No es para reportar — es para sincronizar.</p>
+
+<!-- 3 preguntas -->
+<div class="grid grid-cols-3 gap-3 mb-6">
+  ${[
+    ['1','¿Qué hice desde el último Daily que ayuda al proyecto?','Sirve para que todos sepan el avance real, no las intenciones.'],
+    ['2','¿Qué voy a hacer hoy / esta clase?','Compromiso del día. Si no se cumple, hay que entender por qué.'],
+    ['3','¿Hay algo que me está trabando?','La pregunta más importante. El Scrum Master toma nota.'],
+  ].map(p=>`
+    <div class="panel p-5">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center mono scrum mb-2" style="background:#1a1428;border:1px solid var(--scrum);font-size:14px;">${p[0]}</div>
+      <div class="font-semibold text-sm mb-1">${p[1]}</div>
+      <div class="text-xs muted">${p[2]}</div>
+    </div>
+  `).join('')}
+</div>
+
+<!-- Simulador -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">EJEMPLOS · RESPUESTAS BUENAS Y MALAS</div>
+  <div class="grid grid-cols-2 gap-3">
+    <div class="panel-2 p-3 border-l-2 border-l-[var(--red)]">
+      <div class="text-xs mb-2" style="color:#ff7788">❌ MAL</div>
+      <ul class="text-sm space-y-2">
+        <li>"Estuve trabajando en cosas."<div class="text-[11px] muted">→ Demasiado vago. ¿Qué cosas?</div></li>
+        <li>"No hice nada."<div class="text-[11px] muted">→ ¿Por qué? ¿Hay un bloqueo no reportado?</div></li>
+        <li>"Y bueno, primero abrí la compu, después...[10 min]"<div class="text-[11px] muted">→ Daily no es un informe detallado.</div></li>
+      </ul>
+    </div>
+    <div class="panel-2 p-3 border-l-2 border-l-[var(--scrum)]">
+      <div class="text-xs scrum mb-2">✅ BIEN</div>
+      <ul class="text-sm space-y-2">
+        <li>"Conecté el sensor al A0 y funciona."<div class="text-[11px] muted">→ Concreto, verificable.</div></li>
+        <li>"Voy a terminar el script de limpieza."<div class="text-[11px] muted">→ Compromiso claro del día.</div></li>
+        <li>"Me traba que no tengo el umbral de Hardware."<div class="text-[11px] muted">→ Bloqueo explícito + qué necesita.</div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Cronómetro 15 min -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">CRONÓMETRO DEL DAILY · 15 minutos máx</div>
+    <div class="flex gap-2">
+      <button class="btn btn-accent" onclick="startDailyTimer()">▶ Iniciar</button>
+      <button class="btn" onclick="pauseDailyTimer()">⏸ Pausar</button>
+      <button class="btn" onclick="resetDailyTimer()">↺ Reset</button>
+    </div>
+  </div>
+  <div class="text-center py-4">
+    <div class="timer-big scrum" id="daily-timer">15:00</div>
+    <div class="text-xs muted mt-2" id="daily-timer-status">Esperando</div>
+  </div>
+</div>
+
+<!-- Formulario digital -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">FORMULARIO DE DAILY DIGITAL</div>
+  <p class="text-xs muted mb-3">Para cuando no pueden verse en persona — se manda por WhatsApp del proyecto.</p>
+  <div class="grid grid-cols-2 gap-3 mb-3">
+    <div>
+      <label class="text-xs muted">Nombre</label>
+      <input id="d-name" type="text" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1"/>
+    </div>
+    <div>
+      <label class="text-xs muted">Team</label>
+      <select id="d-team" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1">
+        <option value="hw">🔧 Hardware</option>
+        <option value="sw">💻 Software</option>
+        <option value="com">🎪 Comunicación</option>
+        <option value="scrum">⚙️ Scrum</option>
+      </select>
+    </div>
+  </div>
+  <div class="space-y-3">
+    <div>
+      <label class="text-xs muted">🟢 ¿Qué hice?</label>
+      <textarea id="d-done" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1" style="min-height:50px;" placeholder="Concreto y verificable"></textarea>
+    </div>
+    <div>
+      <label class="text-xs muted">🎯 ¿Qué voy a hacer?</label>
+      <textarea id="d-today" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1" style="min-height:50px;"></textarea>
+    </div>
+    <div>
+      <label class="text-xs muted">🚫 ¿Bloqueos?</label>
+      <textarea id="d-block" class="w-full bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm mt-1" style="min-height:50px;" placeholder="Vacío si no hay"></textarea>
+    </div>
+    <div class="flex justify-end">
+      <button class="btn btn-accent" onclick="saveDaily()">Enviar Daily ✓</button>
+    </div>
+  </div>
+</div>
+
+<!-- Historial -->
+<div class="text-xs mono muted mb-3">HISTORIAL DE DAILYS · ${STATE.dailies.length} registrados</div>
+<div class="space-y-2">
+${STATE.dailies.length===0
+  ? '<div class="panel p-6 text-center text-sm muted">Sin Dailys registrados todavía.</div>'
+  : STATE.dailies.slice().reverse().slice(0,10).map(d=>`
+    <div class="panel p-3 text-xs">
+      <div class="flex items-center justify-between mb-1">
+        <div class="flex items-center gap-2">
+          <strong>${d.name||'(sin nombre)'}</strong>
+          ${teamBadge(d.team||'scrum')}
+        </div>
+        <div class="muted mono">${d.ts}</div>
+      </div>
+      ${d.done?`<div>🟢 ${d.done}</div>`:''}
+      ${d.today?`<div style="color:#5cc0ff">🎯 ${d.today}</div>`:''}
+      ${d.block?`<div style="color:#ff7788">🚫 ${d.block}</div>`:''}
+    </div>
+  `).join('')}
+</div>
+<div class="text-center mt-3">
+  <button class="btn text-xs" onclick="exportDailies()">📋 Exportar todos los Dailys</button>
+</div>
+`;
+let DAILY_INT=null, DAILY_SEC=900, DAILY_PAUSED=true;
+function startDailyTimer(){ if(!DAILY_INT){ DAILY_PAUSED=false; DAILY_INT=setInterval(tickDaily,1000); } document.getElementById('daily-timer-status').textContent='Corriendo'; }
+function pauseDailyTimer(){ DAILY_PAUSED=!DAILY_PAUSED; document.getElementById('daily-timer-status').textContent = DAILY_PAUSED?'Pausado':'Corriendo'; }
+function resetDailyTimer(){ DAILY_SEC=900; clearInterval(DAILY_INT); DAILY_INT=null; const t=document.getElementById('daily-timer'); if(t){t.textContent='15:00';t.style.color='var(--scrum)';} const s=document.getElementById('daily-timer-status'); if(s)s.textContent='Esperando'; }
+function tickDaily(){
+  if(DAILY_PAUSED) return;
+  DAILY_SEC--;
+  const m=Math.floor(DAILY_SEC/60), s=DAILY_SEC%60;
+  const t=document.getElementById('daily-timer'); if(!t){clearInterval(DAILY_INT);DAILY_INT=null;return;}
+  t.textContent=m+':'+String(s).padStart(2,'0');
+  if(DAILY_SEC<=60) t.style.color='var(--red)';
+  else if(DAILY_SEC<=180) t.style.color='var(--yellow)';
+  else t.style.color='var(--scrum)';
+  if(DAILY_SEC===180) toast('⏰ Quedan 3 minutos');
+  if(DAILY_SEC===60) toast('⏰ Queda 1 minuto');
+  if(DAILY_SEC<=0){ clearInterval(DAILY_INT); DAILY_INT=null; document.getElementById('daily-timer-status').textContent='¡Tiempo!'; toast('⏰ Se acabó el Daily'); }
+}
+function saveDaily(){
+  const name = document.getElementById('d-name').value.trim();
+  const team = document.getElementById('d-team').value;
+  const done = document.getElementById('d-done').value.trim();
+  const today = document.getElementById('d-today').value.trim();
+  const block = document.getElementById('d-block').value.trim();
+  if(!name && !done && !today){ toast('Completá algo'); return; }
+  const ts = new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  STATE.dailies.push({name,team,done,today,block,ts});
+  saveState(); toast('✓ Daily registrado'); renderModule(STATE.current);
+}
+function exportDailies(){
+  let t = `DAILYS DEL PROYECTO — ${new Date().toLocaleDateString('es-AR')}\n${'═'.repeat(60)}\n\n`;
+  STATE.dailies.forEach(d=>{
+    t += `[${d.ts}] ${d.name||'?'} (${d.team||'?'})\n`;
+    if(d.done) t += `  🟢 ${d.done}\n`;
+    if(d.today) t += `  🎯 ${d.today}\n`;
+    if(d.block) t += `  🚫 ${d.block}\n`;
+    t += '\n';
+  });
+  copyText(t);
+}
+
+/* ============ M 2.3 Planning ============ */
+MOD_BODY['m2.3'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">El <strong>Sprint Planning</strong> es la reunión al inicio del Sprint donde decidimos qué hacemos esta semana. <strong>30 minutos máximo</strong>.</p>
+
+<!-- 4 pasos -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-4">PROCESO EN 4 PASOS</div>
+  <div class="grid grid-cols-4 gap-3">
+    ${[
+      ['1','Revisar Backlog','¿Qué hay pendiente? ¿Qué es más urgente para este Sprint?'],
+      ['2','Capacidad del team','¿Cuántas horas / clases tenemos? ¿Falta alguien?'],
+      ['3','Seleccionar','Tomar historias del Backlog hasta llenar la capacidad'],
+      ['4','Desglosar','Cada historia grande se parte en subtareas pequeñas'],
+    ].map(s=>`
+      <div class="panel-2 p-4">
+        <div class="w-9 h-9 rounded-full flex items-center justify-center mono scrum mb-2" style="background:#1a1428;border:1px solid var(--scrum);font-size:13px;">${s[0]}</div>
+        <div class="font-semibold text-sm mb-1">${s[1]}</div>
+        <div class="text-[11px] muted">${s[2]}</div>
+      </div>
+    `).join('')}
+  </div>
+</div>
+
+<!-- Definition of Done -->
+<div class="panel p-6 mb-6" style="background:#1a1428;border-color:#36306b;">
+  <div class="flex items-center gap-2 mb-3">
+    <span style="font-size:20px">✅</span>
+    <div class="font-semibold">Definition of Done · ¿cuándo decimos "terminado"?</div>
+  </div>
+  <p class="text-xs muted mb-3">Acordada para todo el proyecto. Sin esto, "terminado" significa cosas distintas para cada uno.</p>
+  <div class="space-y-2">
+    ${[
+      'El código / artefacto está guardado o subido a donde corresponde',
+      'Fue probado y funciona (no "compila", funciona)',
+      'El Scrum Master lo movió a "Hecho" en el Sprintboard',
+      'Al menos otro integrante lo verificó',
+      'Está documentado lo mínimo necesario (un README, una nota en el HTML, etc.)',
+    ].map(c=>`<div class="text-sm flex items-start gap-2 panel-2 p-2"><span class="scrum">✓</span><span>${c}</span></div>`).join('')}
+  </div>
+</div>
+
+<!-- Definition of Ready -->
+<div class="panel p-6 mb-6">
+  <div class="flex items-center gap-2 mb-3">
+    <span style="font-size:20px">🟢</span>
+    <div class="font-semibold">Definition of Ready · ¿cuándo una historia puede entrar al Sprint?</div>
+  </div>
+  <p class="text-xs muted mb-3">Si una historia no cumple esto, NO entra al Sprint. Mejor planning, menos sorpresas.</p>
+  <div class="space-y-2">
+    ${[
+      'Tiene un título claro (no "varias cosas de Software")',
+      'Tiene criterio de aceptación verificable',
+      'El team que la va a hacer la entiende',
+      'Tiene estimación (puntos: 1, 2, 3, 5, 8, 13)',
+      'No depende de algo que todavía no existe',
+    ].map(c=>`<div class="text-sm flex items-start gap-2 panel-2 p-2"><span class="scrum">✓</span><span>${c}</span></div>`).join('')}
+  </div>
+</div>
+
+<!-- Capacidad sprint -->
+<div class="panel p-5">
+  <div class="text-xs mono muted mb-3">CAPACIDAD DEL SPRINT</div>
+  <p class="text-xs muted mb-4">Cuántos puntos puede hacer el equipo por semana. Empezá conservador y ajustá Sprint a Sprint.</p>
+  <div class="grid grid-cols-3 gap-3">
+    ${['hw','sw','com'].map(t=>{
+      const name = {hw:'🔧 Hardware', sw:'💻 Software', com:'🎪 Comunicación'}[t];
+      const stories = STATE.board.filter(s=>s.team===t);
+      const sprints = [1,2,3,4];
+      return `<div class="panel-2 p-4">
+        <div class="text-sm font-semibold mb-2">${name}</div>
+        ${sprints.map(sp=>{
+          const ss = stories.filter(s=>s.sprint===sp);
+          const pts = ss.reduce((a,b)=>a+b.estim,0);
+          return `<div class="flex items-center justify-between text-xs py-1">
+            <span class="mono muted">Sprint ${sp}</span>
+            <span class="mono scrum">${pts} pts · ${ss.length} hist.</span>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }).join('')}
+  </div>
+  <p class="text-[11px] muted mt-3">💡 Si un team tiene 30+ puntos en un Sprint, probablemente esté sobrecargado. Ajustá.</p>
+</div>
+`;
+
+/* ============ M 2.4 Review + Retro ============ */
+const RETRO_COLS = [
+  {id:'good',  t:'🟢 Seguir haciendo', c:'#5fffaa', sub:'qué funcionó bien'},
+  {id:'stop',  t:'🔴 Dejar de hacer',  c:'#ff7788', sub:'qué nos trabó'},
+  {id:'start', t:'🟡 Empezar a hacer', c:'#ffcc55', sub:'qué nos faltó'},
+  {id:'more',  t:'⬆️ Más de',          c:'#7bb5ff', sub:'queremos aumentar'},
+  {id:'less',  t:'⬇️ Menos de',        c:'#ff9b6b', sub:'queremos reducir'},
+];
+MOD_BODY['m2.4'] = (m) => {
+  const currentSprint = getField('retro_sprint','1');
+  const retro = STATE.retros[currentSprint] || {good:[],stop:[],start:[],more:[],less:[]};
+  return `
+${moduleHeader(m)}
+
+<!-- Sprint Review -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-3">SPRINT REVIEW · al final del Sprint</div>
+  <div class="grid grid-cols-3 gap-3">
+    ${[
+      ['🎬','Demo en vivo','Cada team muestra lo terminado en 5 min. No slides — código corriendo, sistema funcionando.'],
+      ['❓','3 preguntas','¿Qué se terminó? ¿Qué quedó pendiente y por qué? ¿Cambia algo para el próximo Sprint?'],
+      ['👥','Quién participa','Todos los teams + docente si puede.'],
+    ].map(c=>`<div class="panel-2 p-4"><div style="font-size:24px">${c[0]}</div><div class="font-semibold text-sm mt-1">${c[1]}</div><div class="text-xs muted mt-1">${c[2]}</div></div>`).join('')}
+  </div>
+  <div class="panel-2 p-3 mt-3 text-xs"><strong>Regla:</strong> en el Review solo se muestra lo <strong class="scrum">terminado de verdad</strong> (cumple Definition of Done). Lo "casi terminado" no se demo'ea.</div>
+</div>
+
+<!-- Retro -->
+<div class="panel p-6">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <div class="text-xs mono muted">RETROSPECTIVA · formato Starfish</div>
+      <p class="text-xs muted mt-1">La Retro no es para culpar — es para mejorar.</p>
+    </div>
+    <select id="retro-sprint" class="bg-[var(--surface2)] border border-[var(--border)] rounded px-3 py-1 text-sm"
+      onchange="setField('retro_sprint',this.value);renderModule(STATE.current);">
+      ${[1,2,3,4].map(n=>`<option value="${n}" ${currentSprint==n?'selected':''}>Sprint ${n}</option>`).join('')}
+    </select>
+  </div>
+
+  <div class="grid grid-cols-5 gap-2 mb-4">
+    ${RETRO_COLS.map(col=>`
+      <div class="retro-col" style="border-top-color:${col.c}">
+        <div class="text-xs font-semibold mb-1" style="color:${col.c}">${col.t}</div>
+        <div class="text-[10px] muted mb-2">${col.sub}</div>
+        <div id="retro-${col.id}" class="space-y-2 mb-2">
+          ${(retro[col.id]||[]).map((card,i)=>`
+            <div class="retro-card">
+              <span>${card.text}</span>
+              <div class="flex items-center gap-1">
+                <span class="vote-btn ${card.voted?'voted':''}" onclick="voteRetro('${col.id}',${i})">👍 ${card.votes||0}</span>
+                <span class="vote-btn" onclick="delRetro('${col.id}',${i})">✕</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn btn-ghost text-[11px] w-full" onclick="addRetro('${col.id}')">+ Agregar</button>
+      </div>
+    `).join('')}
+  </div>
+
+  <!-- Compromisos -->
+  <div class="panel-2 p-4 mt-4">
+    <div class="text-xs mono muted mb-2">⭐ COMPROMISOS PARA EL PRÓXIMO SPRINT</div>
+    <p class="text-[11px] muted mb-2">Las 3 tarjetas más votadas se convierten en compromisos del equipo.</p>
+    <div id="commitments" class="space-y-1 text-sm"></div>
+  </div>
+</div>
+`;
+};
+MOD_AFTER['m2.4'] = () => updateCommitments();
+function getRetro(){ const s=getField('retro_sprint','1'); STATE.retros[s] = STATE.retros[s] || {good:[],stop:[],start:[],more:[],less:[]}; return STATE.retros[s]; }
+function addRetro(col){
+  const txt = prompt('Texto:'); if(!txt) return;
+  const r = getRetro();
+  r[col] = r[col] || [];
+  r[col].push({text:txt, votes:0});
+  saveState(); renderModule(STATE.current);
+}
+function voteRetro(col,i){
+  const r = getRetro();
+  r[col][i].votes = (r[col][i].votes||0)+1;
+  r[col][i].voted = true;
+  saveState(); renderModule(STATE.current);
+}
+function delRetro(col,i){
+  const r = getRetro();
+  r[col].splice(i,1);
+  saveState(); renderModule(STATE.current);
+}
+function updateCommitments(){
+  const r = getRetro();
+  const all = [];
+  for(const col of RETRO_COLS){
+    (r[col.id]||[]).forEach(c=> all.push({col, ...c}));
+  }
+  all.sort((a,b)=>(b.votes||0)-(a.votes||0));
+  const top3 = all.slice(0,3).filter(x=>(x.votes||0)>0);
+  const el = document.getElementById('commitments');
+  if(!el) return;
+  el.innerHTML = top3.length===0
+    ? '<div class="text-xs muted">Agregá tarjetas y votá las más importantes 👍 — las top 3 aparecerán acá.</div>'
+    : top3.map((c,i)=>`<div class="text-sm flex gap-2"><span class="scrum mono">${i+1}.</span> <span>${c.text}</span> <span class="text-[10px] muted">(${c.votes} votos · ${c.col.t})</span></div>`).join('');
+}
+
+/* ============ M 2.5 Bloqueos ============ */
+MOD_BODY['m2.5'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Un <strong>bloqueo</strong> es algo que impide que una tarea avance, y que la persona <em>no puede resolver sola</em>. El Scrum Master los detecta, registra y ayuda a resolverlos.</p>
+
+<!-- Tipos -->
+<div class="grid grid-cols-4 gap-3 mb-6">
+  ${[
+    ['🔧','Técnico','El sensor no manda datos, el código tira un error que nadie entiende','Buscar par-programming, escalar al docente'],
+    ['🧑‍🤝‍🧑','Dependencia','Software espera el formato del CSV que tiene que confirmar Hardware','Sentar a los dos teams a destrabar en 10 min'],
+    ['📦','Recursos','Falta el cable USB, no hay tiempo de impresora','Buscar alternativa, pedir prestado, ajustar plan'],
+    ['🕐','Tiempo','No nos dio el tiempo en clase','Replanificar, sacar features menos críticas'],
+  ].map(b=>`
+    <div class="panel p-4">
+      <div style="font-size:24px" class="mb-2">${b[0]}</div>
+      <div class="font-semibold text-sm mb-1">${b[1]}</div>
+      <div class="text-[11px] muted mb-2">${b[2]}</div>
+      <div class="text-[10px] panel-2 p-2 rounded scrum">💡 ${b[3]}</div>
+    </div>
+  `).join('')}
+</div>
+
+<!-- Registro -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">REGISTRO DE BLOQUEOS</div>
+    <button class="btn btn-accent" onclick="addBlockModal()">+ Registrar bloqueo</button>
+  </div>
+
+  <div id="blocks-list">
+    ${STATE.blocks.length===0
+      ? '<div class="panel-2 p-6 text-center text-sm muted">Sin bloqueos registrados. ¡Buena señal!</div>'
+      : STATE.blocks.slice().reverse().map((b,idx)=>{
+        const realIdx = STATE.blocks.length-1-idx;
+        const statusBadge = {active:'🔴 Activo',resolving:'🟡 En resolución',resolved:'✅ Resuelto'}[b.status]||b.status;
+        return `<div class="panel-2 p-4 mb-2">
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-1 flex-wrap">
+                <span class="chip" style="background:${b.status==='active'?'#3c0010':b.status==='resolving'?'#3c3000':'#003c1a'};">${statusBadge}</span>
+                ${teamBadge(b.team)}
+                <span class="text-[11px] muted mono">${b.date}</span>
+                ${b.reporter?`<span class="text-[11px] muted">por ${b.reporter}</span>`:''}
+              </div>
+              <div class="text-sm">${b.desc}</div>
+              ${b.resolution?`<div class="text-[11px] mt-2" style="color:#5fffaa">✅ <strong>Resuelto:</strong> ${b.resolution}</div>`:''}
+            </div>
+            <div class="flex gap-1">
+              ${b.status!=='resolved'?`<button class="btn text-[10px]" onclick="resolveBlock(${realIdx})">Resolver</button>`:''}
+              <button class="btn text-[10px]" style="border-color:#551122;color:#ff7788;" onclick="delBlock(${realIdx})">✕</button>
+            </div>
+          </div>
+        </div>`;
+      }).join('')
+    }
+  </div>
+</div>
+
+<!-- Estadísticas -->
+${STATE.blocks.length>0?`
+<div class="panel p-5">
+  <div class="text-xs mono muted mb-3">ESTADÍSTICAS</div>
+  <div class="grid grid-cols-3 gap-3 text-center">
+    <div class="panel-2 p-3"><div class="text-[10px] muted">Total</div><div class="text-2xl mono scrum">${STATE.blocks.length}</div></div>
+    <div class="panel-2 p-3"><div class="text-[10px] muted">Activos</div><div class="text-2xl mono" style="color:#ff7788">${STATE.blocks.filter(b=>b.status==='active').length}</div></div>
+    <div class="panel-2 p-3"><div class="text-[10px] muted">Resueltos</div><div class="text-2xl mono" style="color:#5fffaa">${STATE.blocks.filter(b=>b.status==='resolved').length}</div></div>
+  </div>
+</div>
+`:''}
+`;
+function addBlockModal(){
+  const desc = prompt('Descripción del bloqueo:'); if(!desc) return;
+  const team = prompt('Team afectado (hw / sw / com / scrum):','sw'); if(!['hw','sw','com','scrum'].includes(team)) return toast('Team inválido');
+  const reporter = prompt('¿Quién lo reporta?','');
+  const date = new Date().toLocaleDateString('es-AR');
+  STATE.blocks.push({desc,team,reporter,date,status:'active'});
+  saveState(); renderModule(STATE.current); toast('Bloqueo registrado');
+}
+function resolveBlock(idx){
+  const res = prompt('¿Cómo se resolvió? (para aprender)','');
+  if(res===null) return;
+  STATE.blocks[idx].status='resolved';
+  STATE.blocks[idx].resolution=res;
+  saveState(); renderModule(STATE.current); toast('✓ Bloqueo resuelto');
+}
+function delBlock(idx){
+  if(!confirm('¿Eliminar este bloqueo del registro?')) return;
+  STATE.blocks.splice(idx,1);
+  saveState(); renderModule(STATE.current);
+}
+
+/* ============ M 3.1 Sprintboard ============ */
+MOD_BODY['m3.1'] = (m) => {
+  const cols = [
+    {id:'todo', t:'Por hacer', ic:'📋', tint:'#3b3b3b'},
+    {id:'doing', t:'En progreso', ic:'🔄', tint:'#003c5c'},
+    {id:'review', t:'En revisión', ic:'👁️', tint:'#3c3000'},
+    {id:'done', t:'Hecho', ic:'✅', tint:'#003c1a'},
+  ];
+  return `
+${moduleHeader(m)}
+<p class="text-base muted mb-4">El Sprintboard es <strong>el mapa del proyecto</strong>. Todos los teams trabajan acá. Vos lo mantenés ordenado.</p>
+
+<div class="flex gap-3 mb-4 items-center text-xs flex-wrap">
+  <button class="btn btn-accent" onclick="exportBoard()">📋 Reportar al Scrum Master</button>
+  <button class="btn btn-ghost text-[11px] muted" onclick="if(confirm('Resetear el Sprintboard al estado inicial?')){STATE.board=JSON.parse(JSON.stringify(DEFAULT_STORIES));saveState();renderBoard();}">↺ Reset</button>
+  <div class="flex-1"></div>
+  <span class="muted">Filtrar:</span>
+  <select id="kbn-team" class="bg-[var(--surface2)] border border-[var(--border)] rounded px-2 py-1 text-xs" onchange="renderBoard()">
+    <option value="all">Todos los teams</option>
+    <option value="hw">🔧 Hardware</option>
+    <option value="sw">💻 Software</option>
+    <option value="com">🎪 Comunicación</option>
+  </select>
+  <select id="kbn-sprint" class="bg-[var(--surface2)] border border-[var(--border)] rounded px-2 py-1 text-xs" onchange="renderBoard()">
+    <option value="all">Todos los sprints</option>
+    <option value="1">Sprint 1</option><option value="2">Sprint 2</option>
+    <option value="3">Sprint 3</option><option value="4">Sprint 4</option>
+  </select>
+</div>
+
+<!-- Sprint progress -->
+<div class="panel-2 p-3 mb-4 flex items-center gap-4 text-xs">
+  <span class="muted mono">PROGRESO DEL SPRINT:</span>
+  <div class="flex-1"><div class="progress-bar"><div id="sprint-progress" style="width:0%"></div></div></div>
+  <span id="sprint-progress-text" class="scrum mono"></span>
+</div>
+
+<div class="grid grid-cols-4 gap-3" id="kanban">
+${cols.map(c=>`
+  <div class="panel-2 p-3" style="border-top:3px solid ${c.tint};">
+    <div class="flex items-center justify-between mb-3 text-xs font-semibold">
+      <span>${c.ic} ${c.t}</span>
+      <span class="muted mono" id="cnt-${c.id}">0</span>
+    </div>
+    <div class="kanban-drop space-y-2" data-col="${c.id}" style="min-height:300px;"></div>
+  </div>
+`).join('')}
+</div>
+`;
+};
+MOD_AFTER['m3.1'] = () => { window._refreshBoard = renderBoard; renderBoard(); };
+function renderBoard(){
+  const ft = document.getElementById('kbn-team')?.value || 'all';
+  const fs = document.getElementById('kbn-sprint')?.value || 'all';
+  const stories = STATE.board.filter(s=>(ft==='all'||s.team===ft) && (fs==='all'||s.sprint==+fs));
+  ['todo','doing','review','done'].forEach(col=>{
+    const drop = document.querySelector(`.kanban-drop[data-col="${col}"]`);
+    if(!drop) return;
+    drop.innerHTML='';
+    const items = stories.filter(s=>s.col===col);
+    document.getElementById('cnt-'+col).textContent = items.length;
+    items.forEach(st=>{
+      const card = document.createElement('div');
+      card.className = `kbn-card team-${st.team}-card${st.blocked?' blocked':''}`;
+      card.draggable = true;
+      card.innerHTML = `
+        <div class="flex items-start gap-1 flex-wrap mb-2">
+          <span class="chip mono" style="font-size:9px;padding:1px 5px;">S${st.sprint}</span>
+          ${teamBadge(st.team)}
+          ${prioBadge(st.prio)}
+          ${st.blocked?'<span title="'+(st.blockReason||'')+'">🚫</span>':''}
+        </div>
+        <div>${st.title}</div>
+        <div class="flex justify-between items-center mt-2">
+          <div class="text-[10px] mono scrum">${st.estim} pts</div>
+          ${st.who?`<div class="who">👤 ${st.who}</div>`:''}
+        </div>
+      `;
+      card.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', st.id); card.classList.add('dragging'); });
+      card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+      card.addEventListener('click',()=>openStoryModal(st.id));
+      drop.appendChild(card);
+    });
+  });
+  document.querySelectorAll('.kanban-drop').forEach(drop=>{
+    drop.ondragover = e=>{ e.preventDefault(); drop.classList.add('drag-over'); };
+    drop.ondragleave = ()=> drop.classList.remove('drag-over');
+    drop.ondrop = e=>{
+      e.preventDefault(); drop.classList.remove('drag-over');
+      const id = e.dataTransfer.getData('text/plain');
+      const s = findStory(id);
+      if(s){ s.col = drop.dataset.col; saveState(); renderBoard(); updateProjectLight(); }
+    };
+  });
+  // Sprint progress
+  const total = stories.length;
+  const done = stories.filter(s=>s.col==='done').length;
+  const pct = total? Math.round(done/total*100):0;
+  const p = document.getElementById('sprint-progress'); if(p) p.style.width = pct+'%';
+  const pt = document.getElementById('sprint-progress-text'); if(pt) pt.textContent = `${done}/${total} (${pct}%)`;
+}
+function exportBoard(){
+  const cols = {todo:'📋 Por hacer',doing:'🔄 En progreso',review:'👁️ En revisión',done:'✅ Hecho'};
+  let t = `SPRINTBOARD — ${new Date().toLocaleDateString('es-AR')}\n${'═'.repeat(60)}\n`;
+  for(const c of Object.keys(cols)){
+    const items = STATE.board.filter(s=>s.col===c);
+    if(!items.length) continue;
+    t += `\n${cols[c]} (${items.length})\n`;
+    items.forEach(s=>{
+      const tm = {hw:'HW',sw:'SW',com:'COM'}[s.team]||s.team;
+      t += `  [${tm}|S${s.sprint}|${s.estim}p|${s.prio}] ${s.title}${s.who?' — '+s.who:''}${s.blocked?' 🚫':''}\n`;
+    });
+  }
+  const blk = STATE.board.filter(s=>s.blocked);
+  if(blk.length){ t += `\n🚫 BLOQUEOS ACTIVOS\n`; blk.forEach(s=> t += `  • ${s.title}\n    ${s.blockReason||'(sin razón)'}\n`); }
+  copyText(t);
+}
+
+/* ============ M 3.2 Burndown ============ */
+MOD_BODY['m3.2'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">El <strong>Burndown Chart</strong> muestra cuánto trabajo queda por hacer. Es el "tanque de nafta" del Sprint.</p>
+
+<div class="grid grid-cols-3 gap-3 mb-6 text-center">
+  <div class="panel p-4"><div class="text-[10px] muted">📊 Total puntos del Sprint</div><div class="text-3xl mono scrum mt-1" id="bd-total">0</div></div>
+  <div class="panel p-4"><div class="text-[10px] muted">✅ Puntos completados</div><div class="text-3xl mono mt-1" style="color:#5fffaa" id="bd-done">0</div></div>
+  <div class="panel p-4"><div class="text-[10px] muted">📋 Puntos restantes</div><div class="text-3xl mono mt-1" style="color:#ffcc55" id="bd-left">0</div></div>
+</div>
+
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">BURNDOWN CHART</div>
+    <select id="bd-sprint" class="bg-[var(--surface2)] border border-[var(--border)] rounded px-3 py-1 text-xs" onchange="renderBurndown()">
+      ${[1,2,3,4].map(n=>`<option value="${n}">Sprint ${n}</option>`).join('')}
+    </select>
+  </div>
+  <canvas id="burndown-canvas" style="max-height:340px;"></canvas>
+</div>
+
+<div id="bd-interp" class="panel p-4"></div>
+`;
+MOD_AFTER['m3.2'] = () => renderBurndown();
+let burndownChart=null;
+function renderBurndown(){
+  const sp = +(document.getElementById('bd-sprint')?.value || 1);
+  const stories = STATE.board.filter(s=>s.sprint===sp);
+  const totalPts = stories.reduce((a,b)=>a+b.estim,0);
+  const donePts = stories.filter(s=>s.col==='done').reduce((a,b)=>a+b.estim,0);
+  const leftPts = totalPts - donePts;
+  document.getElementById('bd-total').textContent = totalPts;
+  document.getElementById('bd-done').textContent = donePts;
+  document.getElementById('bd-left').textContent = leftPts;
+
+  // Ideal: linear decrease over 7 days; Real: simulated based on done so far
+  const days = 7;
+  const ideal = []; for(let i=0;i<=days;i++) ideal.push(totalPts*(1 - i/days));
+  // Real: linear interpolation from totalPts to leftPts split based on days passed (simulated)
+  const passed = Math.min(days, Math.ceil((donePts/totalPts)*days)) || 0;
+  const real = []; for(let i=0;i<=days;i++){
+    if(i<=passed) real.push(totalPts - (donePts*i/Math.max(1,passed)));
+    else real.push(null);
+  }
+
+  const ctx = document.getElementById('burndown-canvas').getContext('2d');
+  if(burndownChart) burndownChart.destroy();
+  burndownChart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels:['Lun','Mar','Mié','Jue','Vie','Sáb','Dom','Lun'],
+      datasets:[
+        {label:'Ideal', data:ideal, borderColor:'#a78bfa', backgroundColor:'#a78bfa22', borderDash:[6,4], pointRadius:0, tension:0},
+        {label:'Real',  data:real,  borderColor:'#00ff88', backgroundColor:'#00ff8822', pointRadius:5, pointBackgroundColor:'#00ff88', tension:.1},
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#aaa'}}, tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y?.toFixed(1)||'-'} pts`}}},
+      scales:{
+        y:{beginAtZero:true, ticks:{color:'#888'}, grid:{color:'#222'}, title:{display:true,text:'Puntos restantes',color:'#888'}},
+        x:{ticks:{color:'#888'}, grid:{color:'#222'}},
+      }
+    }
+  });
+
+  // Interpretation
+  const interp = document.getElementById('bd-interp');
+  const ratio = totalPts? donePts/totalPts : 0;
+  const expectedRatio = passed/days;
+  let msg, color;
+  if(totalPts===0){ msg='Este Sprint todavía no tiene historias. Cargá tareas al planning.'; color='#888'; }
+  else if(ratio >= expectedRatio*1.1){ msg='🟢 <strong>Excelente ritmo.</strong> Vas adelantado. Considerá tomar 1-2 historias extra del Backlog.'; color='#5fffaa'; }
+  else if(ratio >= expectedRatio*0.7){ msg='🟡 <strong>Ritmo aceptable.</strong> Estás en línea con el plan ideal. Mantenelo.'; color='#ffcc55'; }
+  else{ msg='🔴 <strong>Ritmo bajo.</strong> Hay riesgo de no terminar el Sprint. Revisar bloqueos en la próxima Retro. ¿Hay alguien sobrecargado?'; color='#ff7788'; }
+  interp.innerHTML = `<div style="color:${color};font-size:14px;">${msg}</div>`;
+  interp.style.borderColor = color;
+}
+
+/* ============ M 3.3 Dependencias ============ */
+MOD_BODY['m3.3'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Una <strong>dependencia</strong> es cuando un team no puede terminar su trabajo hasta que otro entregue algo. <strong>Visibilizarlas a tiempo</strong> es uno de los trabajos más importantes del team Scrum.</p>
+
+<!-- Mapa -->
+<div class="panel p-6 mb-6">
+  <div class="text-xs mono muted mb-4">MAPA DE DEPENDENCIAS DEL PROYECTO</div>
+  <svg viewBox="0 0 500 320" class="w-full" style="max-width:600px;display:block;margin:0 auto;">
+    <!-- Hardware -->
+    <circle cx="100" cy="80" r="40" fill="#1a0d05" stroke="#f97316" stroke-width="2"/>
+    <text x="100" y="78" text-anchor="middle" fill="#ffb074" font-size="14" font-weight="700">🔧</text>
+    <text x="100" y="95" text-anchor="middle" fill="#ffb074" font-size="11">Hardware</text>
+    <!-- Software -->
+    <circle cx="400" cy="80" r="40" fill="#082548" stroke="#3b82f6" stroke-width="2"/>
+    <text x="400" y="78" text-anchor="middle" fill="#7bb5ff" font-size="14" font-weight="700">💻</text>
+    <text x="400" y="95" text-anchor="middle" fill="#7bb5ff" font-size="11">Software</text>
+    <!-- Comunicación -->
+    <circle cx="250" cy="260" r="40" fill="#3a1a08" stroke="#ff6b35" stroke-width="2"/>
+    <text x="250" y="258" text-anchor="middle" fill="#ff9b6b" font-size="14" font-weight="700">🎪</text>
+    <text x="250" y="275" text-anchor="middle" fill="#ff9b6b" font-size="11">Comunicación</text>
+    
+    <!-- Arrows -->
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0,0 L10,5 L0,10 z" fill="#a78bfa"/>
+      </marker>
+    </defs>
+    
+    <!-- HW -> SW -->
+    <line x1="140" y1="80" x2="360" y2="80" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr)"/>
+    <text x="250" y="68" text-anchor="middle" fill="#a78bfa" font-size="10" font-family="monospace">formato CSV</text>
+    
+    <!-- SW -> HW -->
+    <line x1="360" y1="100" x2="140" y2="100" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr)" stroke-dasharray="4 3"/>
+    <text x="250" y="118" text-anchor="middle" fill="#a78bfa" font-size="10" font-family="monospace">umbral humedad</text>
+    
+    <!-- HW -> COM -->
+    <line x1="120" y1="115" x2="220" y2="225" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr)"/>
+    <text x="140" y="180" fill="#a78bfa" font-size="10" font-family="monospace">fotos sistema</text>
+    
+    <!-- SW -> COM -->
+    <line x1="380" y1="115" x2="280" y2="225" stroke="#a78bfa" stroke-width="2" marker-end="url(#arr)"/>
+    <text x="350" y="180" fill="#a78bfa" font-size="10" font-family="monospace">demo dashboard</text>
+  </svg>
+  <div class="text-[11px] muted text-center mt-2">Las flechas indican "A entrega a B". Sólida = principal, punteada = secundaria.</div>
+</div>
+
+<!-- Tabla -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">REGISTRO DE DEPENDENCIAS</div>
+    <button class="btn btn-accent" onclick="addDepModal()">+ Dependencia</button>
+  </div>
+
+  <table class="bk">
+    <thead><tr><th>De</th><th>A</th><th>Qué entrega</th><th>Para cuándo</th><th>Estado</th><th></th></tr></thead>
+    <tbody>
+      ${STATE.deps.map((d,i)=>`
+        <tr>
+          <td>${teamBadge(d.from)}</td>
+          <td>${teamBadge(d.to)}</td>
+          <td>${d.what}</td>
+          <td class="mono accent text-center">${d.target}</td>
+          <td>
+            <select class="bg-transparent border border-[var(--border)] rounded p-1 text-xs" onchange="STATE.deps[${i}].status=this.value;saveState();renderModule(STATE.current);">
+              <option value="pending" ${d.status==='pending'?'selected':''}>🟡 Pendiente</option>
+              <option value="overdue" ${d.status==='overdue'?'selected':''}>🔴 Vencida</option>
+              <option value="resolved" ${d.status==='resolved'?'selected':''}>✅ Resuelta</option>
+            </select>
+          </td>
+          <td><button class="btn text-[10px]" style="border-color:#551122;color:#ff7788;" onclick="STATE.deps.splice(${i},1);saveState();renderModule(STATE.current);">✕</button></td>
+        </tr>
+      `).join('')}
+    </tbody>
+  </table>
+</div>
+
+<div class="panel p-4" style="background:#1a1428;">
+  <div class="text-sm">⚠️ <strong>Si una dependencia está pendiente y la fecha pasó → marcala como vencida.</strong> En la próxima Daily, el Scrum Master pregunta a los dos teams qué pasó.</div>
+</div>
+`;
+function addDepModal(){
+  const from = prompt('Team que entrega (hw / sw / com):','hw');
+  const to = prompt('Team que recibe (hw / sw / com):','sw');
+  const what = prompt('¿Qué entrega?',''); if(!what) return;
+  const target = prompt('Para cuándo (ej. Sprint 2):','Sprint 2');
+  STATE.deps.push({id:'d'+Date.now(),from,to,what,target,status:'pending'});
+  saveState(); renderModule(STATE.current);
+}
+
+/* ============ M 3.4 Normas ============ */
+MOD_BODY['m3.4'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Sin reglas mínimas de comunicación, el equipo se desbanda. Estas 3 normas son <strong>el contrato del proyecto</strong>.</p>
+
+<div class="grid grid-cols-3 gap-4 mb-6">
+  ${[
+    ['1','🔵 Un canal, una conversación',
+      'Todo lo del proyecto va al <strong>grupo de WhatsApp del proyecto</strong>. No en grupos personales. No en DMs que los demás no ven.',
+      'Si Hardware le pregunta a Software por privado, después nadie del resto del equipo se entera.'],
+    ['2','⚡ Los bloqueos se reportan EL MISMO DÍA',
+      'No esperar al Daily de mañana. Si algo está trabado <em>hoy</em>, se reporta hoy. El Scrum Master ayuda a resolverlo.',
+      'Un bloqueo que se reporta tarde = un día perdido del Sprint.'],
+    ['3','📊 El Sprintboard es la verdad',
+      'Si no está en el Sprintboard, no existe. Si está terminado pero no está en "Hecho", para el equipo <strong>no está terminado</strong>.',
+      'Esta norma elimina el clásico "ya casi lo terminé".'],
+  ].map(n=>`
+    <div class="panel p-5">
+      <div class="w-10 h-10 rounded-full flex items-center justify-center mono scrum mb-3" style="background:#1a1428;border:1px solid var(--scrum);font-size:14px;">${n[0]}</div>
+      <div class="font-semibold mb-2">${n[1]}</div>
+      <div class="text-sm muted mb-3">${n[2]}</div>
+      <div class="panel-2 p-2 text-[11px] scrum">💡 ${n[3]}</div>
+    </div>
+  `).join('')}
+</div>
+
+<!-- Plantilla de bloqueo -->
+<div class="panel p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <div class="text-xs mono muted">PLANTILLA PARA REPORTAR BLOQUEO POR WHATSAPP</div>
+    <button class="btn btn-accent" onclick="copyText(\`🚫 BLOQUEO — [Team]\\nTarea: [qué está trabado]\\nPor qué: [la razón]\\nNecesito: [qué resolvería el bloqueo]\`)">📋 Copiar plantilla</button>
+  </div>
+  <div class="panel-2 p-4 mono text-sm" style="background:#0a1a1a;">
+🚫 <span class="scrum">BLOQUEO — [Team]</span>
+<span class="muted">Tarea:</span> [qué está trabado]
+<span class="muted">Por qué:</span> [la razón]
+<span class="muted">Necesito:</span> [qué resolvería el bloqueo]
+  </div>
+  <div class="text-[11px] muted mt-2">Ejemplo: <em>"🚫 BLOQUEO — Software. Tarea: lectura del Arduino real. Por qué: no tenemos el formato confirmado. Necesito: que Hardware confirme si es 'humedad,temperatura' o 'humedad temperatura'."</em></div>
+</div>
+
+<!-- Antipatrones -->
+<div class="panel p-5">
+  <div class="text-xs mono muted mb-3">⚠️ ANTI-PATRONES · evitar a toda costa</div>
+  <div class="space-y-2 text-sm">
+    ${[
+      'Resolver problemas del proyecto por audios de 10 minutos en WhatsApp',
+      'Asignar tareas verbalmente sin cargarlas al Sprintboard',
+      'Decir "yo lo estoy haciendo" sin moverlo a "En progreso"',
+      'Ocultar bloqueos por miedo a quedar mal',
+      'Llegar al Sprint Review con "está casi terminado"',
+      'Que un solo integrante cargue con todo el trabajo del team',
+    ].map(a=>`<div class="panel-2 p-3 flex items-start gap-2"><span style="color:#ff7788">✗</span><span>${a}</span></div>`).join('')}
+  </div>
+</div>
+`;
+
+/* ============ M 3.5 Métricas ============ */
+MOD_BODY['m3.5'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Las métricas no son para juzgar — son para entender. <strong>4 indicadores</strong> que mira el team Scrum.</p>
+
+<div class="grid grid-cols-2 gap-4 mb-6">
+  <div class="panel p-5">
+    <div class="text-xs mono muted mb-2">📈 VELOCIDAD DEL EQUIPO</div>
+    <div class="text-sm muted mb-3">¿Cuántos puntos terminamos por Sprint?</div>
+    <canvas id="chart-velocity" style="max-height:200px;"></canvas>
+  </div>
+  <div class="panel p-5">
+    <div class="text-xs mono muted mb-2">🍩 DISTRIBUCIÓN DE TRABAJO</div>
+    <div class="text-sm muted mb-3">¿Están todos los teams cargando lo suyo?</div>
+    <canvas id="chart-dist" style="max-height:200px;"></canvas>
+  </div>
+  <div class="panel p-5">
+    <div class="text-xs mono muted mb-2">🚫 BLOQUEOS POR ESTADO</div>
+    <div class="text-sm muted mb-3">Activos vs resueltos.</div>
+    <canvas id="chart-blocks" style="max-height:200px;"></canvas>
+  </div>
+  <div class="panel p-5">
+    <div class="text-xs mono muted mb-2">🌡 DEUDA · TAREAS ARRASTRADAS</div>
+    <div class="text-sm muted mb-3">Historias que pasan de Sprint sin terminarse.</div>
+    <div id="debt-meter"></div>
+  </div>
+</div>
+
+<!-- Semáforo grande -->
+<div class="panel p-6" style="background:linear-gradient(135deg,#1a1428,#0a0a0a);border-color:var(--scrum);">
+  <div class="text-xs mono muted mb-3">SEMÁFORO DEL PROYECTO</div>
+  <div id="big-light" class="flex items-center gap-4 text-2xl"></div>
+  <p id="big-light-msg" class="text-sm muted mt-2"></p>
+</div>
+`;
+MOD_AFTER['m3.5'] = () => renderMetrics();
+function renderMetrics(){
+  // Velocity: puntos done por sprint
+  const velData = [1,2,3,4].map(sp=>{
+    const ss = STATE.board.filter(s=>s.sprint===sp && s.col==='done');
+    return ss.reduce((a,b)=>a+b.estim,0);
+  });
+  const vctx = document.getElementById('chart-velocity')?.getContext('2d');
+  if(vctx){
+    if(window._vChart) window._vChart.destroy();
+    window._vChart = new Chart(vctx,{
+      type:'bar',
+      data:{ labels:['S1','S2','S3','S4'], datasets:[{label:'Puntos completados', data:velData, backgroundColor:['#a78bfa','#a78bfa','#a78bfa','#a78bfa']}] },
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#888'},grid:{color:'#222'}},x:{ticks:{color:'#888'},grid:{display:false}}}}
+    });
+  }
+  // Distribution: stories por team
+  const distData = ['hw','sw','com'].map(t=>STATE.board.filter(s=>s.team===t).length);
+  const dctx = document.getElementById('chart-dist')?.getContext('2d');
+  if(dctx){
+    if(window._dChart) window._dChart.destroy();
+    window._dChart = new Chart(dctx,{
+      type:'doughnut',
+      data:{labels:['🔧 Hardware','💻 Software','🎪 Comunicación'], datasets:[{data:distData, backgroundColor:['#f97316','#3b82f6','#ff6b35']}]},
+      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#aaa',font:{size:10}}}}}
+    });
+  }
+  // Blocks: activos vs resueltos
+  const bData = ['active','resolving','resolved'].map(s=>STATE.blocks.filter(b=>b.status===s).length);
+  const bctx = document.getElementById('chart-blocks')?.getContext('2d');
+  if(bctx){
+    if(window._bChart) window._bChart.destroy();
+    window._bChart = new Chart(bctx,{
+      type:'bar',
+      data:{labels:['Activos','En resolución','Resueltos'], datasets:[{data:bData, backgroundColor:['#ff5577','#ffcc55','#5fffaa']}]},
+      options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{ticks:{color:'#888'},grid:{display:false}},x:{ticks:{color:'#888'},grid:{color:'#222'}}}}
+    });
+  }
+  // Debt: stories que no están en done y sprint pasó. Approx: sum of estim of stories in todo/doing of past sprints.
+  const debt = STATE.board.filter(s=>s.col!=='done').reduce((a,b)=>a+b.estim,0);
+  const debtEl = document.getElementById('debt-meter');
+  if(debtEl){
+    const max = STATE.board.reduce((a,b)=>a+b.estim,0)||1;
+    const pct = Math.min(100, Math.round(debt/max*100));
+    const color = pct>70?'#ff7788':pct>40?'#ffcc55':'#5fffaa';
+    debtEl.innerHTML = `
+      <div class="text-3xl mono mt-2" style="color:${color}">${debt} pts</div>
+      <div class="text-[11px] muted mb-2">total pendiente</div>
+      <div class="progress-bar"><div style="width:${pct}%;background:${color}"></div></div>
+      <div class="text-[11px] muted mt-2">${pct<40?'🟢 Manejable':pct<70?'🟡 Vigilarlo':'🔴 Riesgo de no llegar'}</div>
+    `;
+  }
+  // Big semáforo
+  const activeBlocks = STATE.blocks.filter(b=>b.status==='active').length;
+  const blockedStories = STATE.board.filter(s=>s.blocked).length;
+  let color, label, msg;
+  if(activeBlocks >= 3 || blockedStories >= 3){ color='light-red'; label='🔴 Rojo'; msg='Hay muchos bloqueos activos. Convocá retro extra.'; }
+  else if(activeBlocks >= 1 || blockedStories >= 1){ color='light-yellow'; label='🟡 Amarillo'; msg='Atención: hay bloqueos. Asegurate de gestionarlos esta semana.'; }
+  else{ color='light-green'; label='🟢 Verde'; msg='El proyecto está en buen estado. Mantené el ritmo.'; }
+  const bl = document.getElementById('big-light'); if(bl) bl.innerHTML = `<span class="${color}" style="width:30px;height:30px;"></span> <strong>${label}</strong>`;
+  const blm = document.getElementById('big-light-msg'); if(blm) blm.textContent = msg;
+}
+
+/* ============ M 3.6 Final + Entregables ============ */
+const QUIZ_FINAL = [
+  { q:'Hardware dice que no pudo avanzar porque le faltó el cable USB. ¿Qué hacés como Scrum Master?', opts:[
+    'Le digo que se las arregle',
+    'Lo registro como bloqueo + busco solución (pedir prestado, posponer task)',
+    'Lo reporto al docente',
+    'Hago la tarea yo'], correct:1,
+    exp:'Es un bloqueo de recursos. Registrar + ayudar a desbloquear es exactamente tu trabajo.'},
+  { q:'En el Daily, alguien dice "no hice nada". ¿Qué hacés?', opts:[
+    'Lo retás','Lo callás y pasás al siguiente','Le preguntás si hay un bloqueo que no reportó','Le pongo una nota negativa'], correct:2,
+    exp:'"No hice nada" casi siempre esconde un bloqueo, miedo o desorientación. Hay que indagar suave.'},
+  { q:'El Sprintboard tiene tareas en "En progreso" hace 2 semanas sin moverse. ¿Qué señaliza?', opts:[
+    'El equipo es lento','Probablemente hay un bloqueo no reportado o la historia es muy grande','El sistema no funciona','Es normal'], correct:1,
+    exp:'O hay un bloqueo, o la historia es demasiado grande y hay que partirla. Preguntá.'},
+  { q:'Software termina su tarea pero NO la pasa a "Hecho" en el Sprintboard. ¿Existe para el equipo?', opts:[
+    'Sí, lo importante es que esté hecho','No — si no está en "Hecho" en el board, para el equipo no existe','Si lo digo en el Daily alcanza','Depende'], correct:1,
+    exp:'Norma 3 de comunicación: el Sprintboard es la verdad. Si no está en "Hecho", no existe para el equipo.'},
+  { q:'Un team dice "estamos atrasados pero seguro llegamos a la feria". ¿Cómo lo verificás?', opts:[
+    'Le creo','Miro el Burndown Chart y la Velocidad — los números no mienten','Pregunto a otros teams','Lo dejo, no es mi problema'], correct:1,
+    exp:'Las métricas existen para esto. Si el burndown muestra que no llegan al ritmo actual, hay que actuar.'},
+  { q:'En la Retro, alguien dice algo que ofende a otro integrante. ¿Qué hacés?', opts:[
+    'Lo ignoro para no incomodar','Recuerdo la regla "Retro es para mejorar, no para culpar" y redirijo la conversación','Termino la Retro','Doy la razón al ofendido'], correct:1,
+    exp:'Es tu rol facilitar un espacio seguro. Recordar las reglas + redirigir sin tomar partido.'},
+  { q:'Una dependencia entre Hardware y Software lleva 3 días sin resolverse. ¿Qué hacés?', opts:[
+    'Espero al próximo Daily','Junto a los dos teams ese mismo día, 10 min, hasta destrabar','Lo dejo para la Retro','Le digo a Comunicación que tampoco trabajará'], correct:1,
+    exp:'Las dependencias sin resolver son lo más caro del proyecto. Convocá una mini-reunión específica.'},
+];
+const SCRUM_DELIVERABLES = [
+  ['sd-1','Backlog completo cargado en el Sprintboard'],
+  ['sd-2','Al menos 3 Dailys facilitados y registrados'],
+  ['sd-3','Al menos 2 Sprint Reviews realizadas'],
+  ['sd-4','Al menos 2 Retrospectivas con compromisos registrados'],
+  ['sd-5','Burndown Chart revisado al final de cada Sprint'],
+  ['sd-6','Registro de bloqueos con todos resueltos o en gestión'],
+  ['sd-7','Mapa de dependencias actualizado'],
+  ['sd-8','Semáforo del proyecto en 🟢 verde la semana de la feria'],
+];
+MOD_BODY['m3.6'] = (m) => `
+${moduleHeader(m)}
+
+<!-- Autoeval -->
+<div class="text-xs mono muted mb-3">AUTOEVALUACIÓN · 7 escenarios reales</div>
+<div id="quiz-final">
+  ${QUIZ_FINAL.map((qq,i)=>`
+    <div class="panel p-5 mb-4" data-qidx="${i}">
+      <div class="flex items-center gap-2 mb-3"><span class="chip mono">Pregunta ${i+1}</span></div>
+      <div class="mb-3 text-sm">${qq.q}</div>
+      <div class="space-y-2">
+        ${qq.opts.map((o,j)=>`
+          <div class="quiz-opt" data-opt="${j}" onclick="answerQuiz('qfinal',${i},${j})">
+            <span class="mono muted">${'abcd'[j]})</span><span>${o}</span>
+          </div>`).join('')}
+      </div>
+      <div class="explain mt-3 text-xs muted hidden">${qq.exp}</div>
+    </div>
+  `).join('')}
+</div>
+<div class="panel p-5 mb-8" style="background:#1a1428;border-color:#36306b;">
+  <div class="flex items-center justify-between">
+    <div><div class="text-xs muted">Puntaje final</div><div class="mono text-3xl scrum" id="score-final">0 / 7</div></div>
+    <button class="btn" onclick="reviewQuiz('qfinal')">Reiniciar</button>
+  </div>
+</div>
+
+<!-- Entregables -->
+<div class="panel p-6 mb-6" style="background:linear-gradient(135deg,#1a1428,#0a0a0a);border-color:var(--scrum);">
+  <div class="flex items-center gap-2 mb-3">
+    <span style="font-size:22px">📦</span>
+    <h2 class="text-xl font-semibold scrum">Entregables del Team Scrum</h2>
+  </div>
+
+  ${(()=>{
+    const done = SCRUM_DELIVERABLES.filter(([id])=>getCheck(id)).length;
+    const pct = Math.round(done/SCRUM_DELIVERABLES.length*100);
+    return `
+    <div class="mb-4">
+      <div class="flex justify-between text-xs mb-2"><span class="muted">Progreso</span><span class="scrum mono">${done} / ${SCRUM_DELIVERABLES.length} (${pct}%)</span></div>
+      <div class="progress-bar"><div style="width:${pct}%"></div></div>
+    </div>`;
+  })()}
+
+  <div class="space-y-2 mt-4">
+    ${SCRUM_DELIVERABLES.map(([id,t])=>`
+      <label class="flex items-start gap-3 cursor-pointer text-sm panel-2 p-3 rounded">
+        <input type="checkbox" class="mt-1 accent-[var(--scrum)]" ${getCheck(id)?'checked':''} onchange="setCheck('${id}',this.checked);renderModule(STATE.current);"/>
+        <span>${t}</span>
+      </label>
+    `).join('')}
+  </div>
+
+  <button class="btn btn-accent mt-4" onclick="openReport()">📊 Generar reporte general del proyecto</button>
+</div>
+
+<div class="panel p-5 text-center" style="background:#1a1428;">
+  <div style="font-size:30px">🎓</div>
+  <div class="text-lg font-semibold mt-2">¡Listos!</div>
+  <div class="text-sm muted mt-1">Tu trabajo no se ve directamente en el afiche ni en el código — se ve en que el proyecto LLEGÓ. Eso es exactamente lo que hace un buen Scrum Master.</div>
+</div>
+`;
+function openReport(){
+  const m = document.getElementById('report-modal');
+  m.classList.remove('hidden'); m.classList.add('flex');
+  const teams = {hw:'Hardware', sw:'Software', com:'Comunicación', scrum:'Scrum'};
+  let r = `REPORTE GENERAL DEL PROYECTO\n${'═'.repeat(60)}\nFecha: ${new Date().toLocaleString('es-AR')}\n\n`;
+  r += `📋 BACKLOG\n  Total: ${STATE.board.length} historias\n  ${['todo','doing','review','done'].map(c=>`${{todo:'Por hacer',doing:'En progreso',review:'En revisión',done:'Hecho'}[c]}: ${STATE.board.filter(s=>s.col===c).length}`).join('\n  ')}\n\n`;
+  r += `🏆 POR TEAM\n`;
+  for(const t of Object.keys(teams).slice(0,3)){
+    const ss = STATE.board.filter(s=>s.team===t);
+    const d = ss.filter(s=>s.col==='done').length;
+    r += `  ${teams[t]}: ${d}/${ss.length} hist.\n`;
+  }
+  r += `\n📅 POR SPRINT\n`;
+  for(const sp of [1,2,3,4]){
+    const ss = STATE.board.filter(s=>s.sprint===sp);
+    const pts = ss.reduce((a,b)=>a+b.estim,0);
+    const dpts = ss.filter(s=>s.col==='done').reduce((a,b)=>a+b.estim,0);
+    r += `  Sprint ${sp}: ${dpts}/${pts} pts\n`;
+  }
+  r += `\n🚫 BLOQUEOS\n  Total registrados: ${STATE.blocks.length}\n  Activos: ${STATE.blocks.filter(b=>b.status==='active').length}\n  Resueltos: ${STATE.blocks.filter(b=>b.status==='resolved').length}\n`;
+  r += `\n☀️ DAILYS REGISTRADOS\n  ${STATE.dailies.length}\n`;
+  const retros = Object.keys(STATE.retros).length;
+  r += `\n🔄 RETROS REALIZADAS\n  ${retros}\n`;
+  r += `\n📦 ENTREGABLES TEAM SCRUM\n  ${SCRUM_DELIVERABLES.map(([id,t])=>`${getCheck(id)?'✅':'⏳'} ${t}`).join('\n  ')}\n`;
+  document.getElementById('report-content').textContent = r;
+}
+function closeReport(){ const m=document.getElementById('report-modal'); m.classList.add('hidden'); m.classList.remove('flex'); }
+function copyReport(){ copyText(document.getElementById('report-content').textContent); }
+
+/* ============ M 4.1 Herramientas gratuitas ============ */
+MOD_BODY['m4.1'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">Este HTML alcanza para todo el proyecto. Pero si querés <strong>llevar Scrum a otros proyectos</strong> (extracurricular, profesional, freelance), acá tenés las mejores herramientas gratuitas.</p>
+
+<!-- Top 6 -->
+<div class="grid grid-cols-2 gap-4 mb-6">
+  ${[
+    {n:'Trello', url:'trello.com', ic:'📋', desc:'El Kanban más simple. Cuentas gratis ilimitadas. Listas, tarjetas, color labels. <strong>Recomendado para empezar.</strong>',
+      pro:['Ultra simple','Apps móviles','Plantillas de Scrum incluidas'],
+      con:['Sin burndown nativo','Limitado para >50 personas']},
+    {n:'GitHub Projects', url:'github.com', ic:'💻', desc:'Si el proyecto vive en GitHub, las "Projects" son Kanban + roadmap nativos. <strong>Ideal para teams de Software.</strong>',
+      pro:['Integrado al código','Issues = tarjetas','Vistas múltiples (board, tabla, roadmap)'],
+      con:['Curva si no usás GitHub','Menos visual']},
+    {n:'Notion', url:'notion.so', ic:'📝', desc:'Documentación + bases de datos + Kanban en uno. Gratis para uso personal y educativo.',
+      pro:['Todo en uno','Plantillas Scrum gratuitas','Vista calendario/timeline/board'],
+      con:['Más complejo de configurar','Performance baja con miles de items']},
+    {n:'Linear (free)', url:'linear.app', ic:'⚡', desc:'Para teams técnicos. Rápido, lindo, atajos de teclado. Free para hasta 250 issues.',
+      pro:['Velocidad','Diseño impecable','Cycles (= sprints) nativos'],
+      con:['Free limitado','Curva de aprendizaje']},
+    {n:'Miro / Mural', url:'miro.com', ic:'🎨', desc:'Pizarras digitales para Retros y Plannings remotos. Plantillas de Starfish, dot voting, etc.',
+      pro:['Mejor para Retros visuales','Stickies + dot voting','Plantillas pre-armadas'],
+      con:['Free limitado a 3 pizarras','No reemplaza al Sprintboard']},
+    {n:'Jira (free)', url:'atlassian.com/jira', ic:'🏢', desc:'El estándar corporativo. Gratis hasta 10 usuarios. <strong>Útil aprenderlo si vas a trabajar profesionalmente.</strong>',
+      pro:['Estándar industria','Reportes potentes','Burndown nativo'],
+      con:['Lento','Confuso al principio','Overkill para escolar']},
+  ].map(t=>`
+    <div class="panel p-5">
+      <div class="flex items-start gap-3 mb-3">
+        <div style="font-size:32px">${t.ic}</div>
+        <div class="flex-1">
+          <div class="font-semibold text-lg scrum">${t.n}</div>
+          <a href="https://${t.url}" target="_blank" class="text-[11px] muted mono hover:scrum">${t.url}</a>
+        </div>
+      </div>
+      <div class="text-sm muted mb-3">${t.desc}</div>
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div class="panel-2 p-2"><div class="accent mb-1">✓ Pro</div><ul class="text-[10px] muted space-y-0.5">${t.pro.map(p=>`<li>• ${p}</li>`).join('')}</ul></div>
+        <div class="panel-2 p-2"><div style="color:#ff7788" class="mb-1">✗ Con</div><ul class="text-[10px] muted space-y-0.5">${t.con.map(p=>`<li>• ${p}</li>`).join('')}</ul></div>
+      </div>
+    </div>
+  `).join('')}
+</div>
+
+<!-- Para Retros -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">HERRAMIENTAS ESPECÍFICAS PARA RETROS REMOTAS</div>
+  <div class="grid grid-cols-3 gap-3">
+    ${[
+      ['Metroretro', 'metroretro.io', 'Retro online gratis, columnas customizables, votación, anónima'],
+      ['EasyRetro', 'easyretro.io', 'Plantillas listas: Starfish, Mad/Sad/Glad, KALM, 4Ls'],
+      ['Parabol', 'parabol.co', 'Retros + check-ins, gratis hasta 5 personas'],
+    ].map(t=>`
+      <a href="https://${t[1]}" target="_blank" class="panel-2 p-3 block hover:border-[var(--scrum)] transition-all">
+        <div class="font-semibold text-sm scrum">${t[0]}</div>
+        <div class="text-[11px] muted mono">${t[1]}</div>
+        <div class="text-xs muted mt-2">${t[2]}</div>
+      </a>
+    `).join('')}
+  </div>
+</div>
+
+<!-- Recomendación final -->
+<div class="panel p-5" style="background:#1a1428;">
+  <div class="text-xs mono muted mb-3">🎓 RECOMENDACIÓN PARA APRENDER</div>
+  <ol class="text-sm space-y-2 ml-4">
+    <li><span class="scrum mono">1.</span> <strong>Empezá con Trello</strong> — es lo más rápido y suficiente para 90% de los casos.</li>
+    <li><span class="scrum mono">2.</span> Si tu proyecto es técnico, <strong>pasate a GitHub Projects</strong>.</li>
+    <li><span class="scrum mono">3.</span> Para retros remotas, <strong>usá Metroretro o EasyRetro</strong>.</li>
+    <li><span class="scrum mono">4.</span> Si vas a trabajar profesionalmente, <strong>pegale una mirada a Jira</strong> (vas a verlo en cualquier empresa).</li>
+  </ol>
+</div>
+`;
+
+/* ============ M 4.2 Planning Poker ============ */
+const POKER_CARDS = [1,2,3,5,8,13,21,'?','☕'];
+const POKER_STORIES = [
+  {t:'Conectar sensor de humedad al Arduino y probar lecturas estables', hint:'Familiar para Hardware, ~2-3h. Típica 3.'},
+  {t:'Limpiar datos de un CSV con pandas (nulos, outliers, duplicados)', hint:'~1-2h si ya saben pandas. Típica 2.'},
+  {t:'Editar el video completo del proyecto en CapCut (5 actos, 4 min)', hint:'Trabajo largo, primera vez en CapCut. Típica 8.'},
+  {t:'Generar QR e imprimir afiche', hint:'Tarea operativa rápida. Típica 1 o 2.'},
+  {t:'Integrar sensor + relé + bomba + Arduino en un sketch único funcionando 30 min', hint:'Compleja, primera integración real. Típica 8 o 13.'},
+];
+MOD_BODY['m4.2'] = (m) => {
+  const round = STATE.fields.poker_round || 0;
+  const story = POKER_STORIES[round % POKER_STORIES.length];
+  const votes = STATE.fields['poker_votes_'+round] ? JSON.parse(STATE.fields['poker_votes_'+round]) : {};
+  return `
+${moduleHeader(m)}
+<p class="text-base muted mb-6"><strong>Planning Poker</strong> es una técnica para estimar tareas en equipo. Cada uno elige una carta (su estimación) <strong>en privado</strong>, se voltean al mismo tiempo, y se discuten las diferencias. Evita que el primero en hablar influencie al resto.</p>
+
+<!-- ¿Por qué Fibonacci? -->
+<div class="panel p-5 mb-6">
+  <div class="text-xs mono muted mb-3">¿POR QUÉ ESTAS CARTAS?</div>
+  <div class="flex gap-2 mb-3 flex-wrap">
+    ${POKER_CARDS.map(c=>`<div class="panel-2 p-2 mono scrum text-lg" style="width:50px;text-align:center;">${c}</div>`).join('')}
+  </div>
+  <p class="text-sm muted mb-2">Son una serie tipo Fibonacci. <strong>Crecen exponencialmente.</strong> Refleja la realidad: cuanto más grande es una tarea, más incertidumbre hay.</p>
+  <ul class="text-xs muted space-y-1">
+    <li><span class="mono accent">1</span> — trivial (cambiar un texto)</li>
+    <li><span class="mono accent">3</span> — fácil (1-2 horas)</li>
+    <li><span class="mono accent">5</span> — moderado (media clase)</li>
+    <li><span class="mono accent">8</span> — complejo (varias clases)</li>
+    <li><span class="mono accent">13</span> — muy grande (¿partirla en dos historias?)</li>
+    <li><span class="mono accent">?</span> — no entiendo la tarea</li>
+    <li><span class="mono accent">☕</span> — necesito un descanso</li>
+  </ul>
+</div>
+
+<!-- Game -->
+<div class="panel p-6 mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <div class="text-xs mono muted">RONDA ${round+1} / ${POKER_STORIES.length}</div>
+    <div class="flex gap-2">
+      <button class="btn" onclick="prevRound()">← Anterior</button>
+      <button class="btn btn-accent" onclick="nextRound()">Siguiente ronda →</button>
+    </div>
+  </div>
+
+  <div class="panel-2 p-5 mb-5">
+    <div class="text-xs muted mb-1">HISTORIA A ESTIMAR</div>
+    <div class="text-lg font-semibold mb-2">${story.t}</div>
+    <div class="text-[11px] muted">💡 ${story.hint}</div>
+  </div>
+
+  <div class="text-xs mono muted mb-3">ELIGE TU CARTA</div>
+  <div class="flex gap-3 mb-6 flex-wrap">
+    ${POKER_CARDS.map(c=>`
+      <div class="pp-card ${votes['me']==c?'selected':''}" onclick="pokerVote(${round},'me','${c}')">${c}</div>
+    `).join('')}
+  </div>
+
+  <!-- simulated team votes -->
+  <div class="text-xs mono muted mb-3">VOTOS DEL EQUIPO (simulado)</div>
+  <div class="flex gap-3 flex-wrap" id="team-votes">
+    ${['🔧 Lucas (HW)','💻 Mia (SW)','🎪 Sofía (COM)','💻 Tomás (SW)'].map((name,i)=>{
+      const teamVote = votes['t'+i];
+      return `<div class="panel-2 p-3 text-center" style="min-width:130px;">
+        <div class="text-[10px] muted mb-1">${name}</div>
+        <div class="pp-card mx-auto ${teamVote?'selected':''}" style="width:60px;height:90px;font-size:24px;">${teamVote||'?'}</div>
+      </div>`;
+    }).join('')}
+  </div>
+
+  <div class="flex justify-center mt-6">
+    <button class="btn btn-accent text-base" onclick="flipPoker(${round})">🎲 Voltear las cartas</button>
+  </div>
+
+  <div id="poker-result" class="mt-6"></div>
+</div>
+
+<div class="panel p-4" style="background:#1a1428;">
+  <div class="text-sm">💡 <strong>Tip:</strong> si hay <em>mucha diferencia</em> entre votos (uno dice 3, otro 13), no se promedia. Se <strong>discute</strong>: "¿Por qué viste un 3? ¿Por qué un 13?". Eso descubre malentendidos o sub-tareas escondidas.</div>
+</div>
+`;
+};
+function pokerVote(round, who, card){
+  const key='poker_votes_'+round;
+  const v = STATE.fields[key] ? JSON.parse(STATE.fields[key]) : {};
+  v[who] = card;
+  STATE.fields[key] = JSON.stringify(v);
+  saveState(); renderModule(STATE.current);
+}
+function flipPoker(round){
+  const me = STATE.fields['poker_votes_'+round] ? JSON.parse(STATE.fields['poker_votes_'+round]).me : null;
+  if(!me){ toast('Elegí tu carta primero'); return; }
+  // simulate team votes around the typical estimate
+  const story = POKER_STORIES[round % POKER_STORIES.length];
+  const hint = story.hint.match(/[Tt]ípica\s+(\d+)/);
+  const typical = hint ? +hint[1] : 5;
+  const variants = [1,2,3,5,8,13];
+  const nearby = variants.filter(v=>Math.abs(v-typical)<=Math.max(typical*0.6,2));
+  const v = STATE.fields['poker_votes_'+round] ? JSON.parse(STATE.fields['poker_votes_'+round]) : {};
+  for(let i=0;i<4;i++){
+    if(!v['t'+i]) v['t'+i] = nearby[Math.floor(Math.random()*nearby.length)];
+  }
+  STATE.fields['poker_votes_'+round] = JSON.stringify(v);
+  saveState(); renderModule(STATE.current);
+  setTimeout(()=>{
+    const all = [+me, ...['t0','t1','t2','t3'].map(k=>+v[k])];
+    const min = Math.min(...all), max = Math.max(...all);
+    const diff = max-min;
+    let msg, color;
+    if(diff <= 2){ msg=`🟢 <strong>Consenso!</strong> El equipo está alineado (${all.join(', ')}). Estimación: ${typical} pts.`; color='#5fffaa'; }
+    else if(diff <= 5){ msg=`🟡 <strong>Hay diferencias.</strong> Votos: ${all.join(', ')}. Discutan brevemente y vuelvan a votar.`; color='#ffcc55'; }
+    else{ msg=`🔴 <strong>Mucho desacuerdo</strong> (votos: ${all.join(', ')}). Probablemente hay un malentendido sobre la historia — alguien ve algo que otros no.`; color='#ff7788'; }
+    const r = document.getElementById('poker-result');
+    if(r) r.innerHTML = `<div class="panel-2 p-4" style="border-color:${color};color:${color}">${msg}</div>`;
+  },200);
+}
+function nextRound(){ STATE.fields.poker_round = (STATE.fields.poker_round||0)+1; saveState(); renderModule(STATE.current); }
+function prevRound(){ STATE.fields.poker_round = Math.max(0,(STATE.fields.poker_round||0)-1); saveState(); renderModule(STATE.current); }
+
+/* ============ M 4.3 Glosario ============ */
+const GLOSSARY = [
+  ['Backlog','Lista priorizada de TODO lo que hay que hacer para llegar a la meta. Vive en evolución.'],
+  ['Burndown Chart','Gráfico que muestra cuánto trabajo queda por hacer. La línea baja a medida que se completan tareas.'],
+  ['Daily Standup','Reunión diaria de 15 min con 3 preguntas: qué hice, qué voy a hacer, qué me traba.'],
+  ['Definition of Done (DoD)','Lista de criterios que define cuándo una historia está "terminada" para todo el equipo.'],
+  ['Definition of Ready (DoR)','Criterios para que una historia pueda entrar al Sprint (tiene criterio, está estimada, etc.).'],
+  ['Dependencia','Cuando un team no puede terminar su tarea hasta que otro entregue algo.'],
+  ['Épica','Una "súper-historia" muy grande que agrupa varias historias relacionadas.'],
+  ['Estimación','Asignarle un tamaño a una historia. En story points: 1, 2, 3, 5, 8, 13...'],
+  ['Historia de Usuario','Una unidad de trabajo escrita desde la perspectiva del usuario. Formato típico: "Como [rol] quiero [acción] para [beneficio]".'],
+  ['Impediment / Bloqueo','Algo que impide que una tarea avance y la persona no puede resolver sola.'],
+  ['Incremento','Lo que se entrega al final de cada Sprint. Funciona — no es "casi terminado".'],
+  ['Kanban','Sistema de tarjetas que se mueven entre columnas (To Do → In Progress → Done). Sprintboard usa Kanban.'],
+  ['MVP (Minimum Viable Product)','La versión más simple que ya funciona y aporta valor. <em>"¿Qué es lo mínimo para que sirva?"</em>'],
+  ['Planning Poker','Técnica de estimación en equipo con cartas Fibonacci, en privado, simultáneo.'],
+  ['Producto','Lo que se construye. Acá: el sistema de riego funcionando + presentación.'],
+  ['Product Owner','En la industria: quien define el "qué" y prioriza. Acá: la feria + el docente.'],
+  ['Retrospectiva (Retro)','Reunión al final del Sprint para mejorar el proceso: ¿qué cambiamos para la próxima?'],
+  ['Refinamiento (grooming)','Actualizar y aclarar historias del Backlog antes de que entren al Sprint.'],
+  ['Scrum','Marco de trabajo ágil basado en sprints cortos y rituales.'],
+  ['Scrum Master','Persona/team que facilita el proceso. Servant leader.'],
+  ['Servant Leader','Líder que sirve al equipo, no al revés. Quita obstáculos, no manda.'],
+  ['Sprint','Período fijo de trabajo. Acá: una semana.'],
+  ['Sprint Backlog','Las historias del Backlog que el equipo se comprometió a hacer en este Sprint.'],
+  ['Sprint Planning','Reunión al inicio del Sprint para decidir qué hacer esta semana.'],
+  ['Sprint Review','Reunión al final del Sprint para mostrar lo terminado. Demo en vivo.'],
+  ['Sprintboard','El tablero Kanban del Sprint. La verdad operativa del equipo.'],
+  ['Stand-up','Sinónimo de Daily. Se llama así porque se hace de pie (para no extenderse).'],
+  ['Story Points','Unidad de estimación, no de tiempo. Refleja complejidad + incertidumbre + esfuerzo.'],
+  ['Timebox','Tiempo fijo asignado a una reunión o tarea. Se respeta a rajatabla.'],
+  ['Velocidad','Cuántos story points completa el equipo por Sprint. Sirve para planificar.'],
+];
+MOD_BODY['m4.3'] = (m) => `
+${moduleHeader(m)}
+<p class="text-base muted mb-6">30 términos de Scrum traducidos al lenguaje de este proyecto. <strong>Usalo de referencia rápida.</strong></p>
+
+<div class="flex gap-2 mb-4">
+  <input id="gloss-search" type="text" placeholder="Buscar..."
+    oninput="renderGlossary()"
+    class="flex-1 bg-[var(--bg)] border border-[var(--border)] rounded p-2 text-sm"/>
+  <button class="btn" onclick="copyGlossary()">📋 Copiar todo</button>
+</div>
+
+<div id="glossary-list" class="grid grid-cols-2 gap-3"></div>
+`;
+MOD_AFTER['m4.3'] = () => renderGlossary();
+function renderGlossary(){
+  const q = (document.getElementById('gloss-search')?.value||'').toLowerCase();
+  const list = GLOSSARY.filter(([t,d])=> t.toLowerCase().includes(q) || d.toLowerCase().includes(q));
+  const el = document.getElementById('glossary-list'); if(!el) return;
+  el.innerHTML = list.map(([t,d])=>`
+    <div class="panel p-4">
+      <div class="font-semibold scrum mb-1">${t}</div>
+      <div class="text-xs muted">${d}</div>
+    </div>
+  `).join('') || '<div class="muted text-sm col-span-2 text-center py-6">Sin resultados</div>';
+}
+function copyGlossary(){
+  copyText('GLOSARIO SCRUM\n'+'═'.repeat(40)+'\n\n'+GLOSSARY.map(([t,d])=>`${t}\n  ${d}`).join('\n\n'));
+}
+</script>
+
+</body>
+</html>
